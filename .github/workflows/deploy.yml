@@ -58,7 +58,7 @@ jobs:
           cache: 'npm'
           
       - name: Install dependencies
-        run: npm ci
+        run: rm -f package-lock.json && npm install
         
       - name: Build
         # Set base path for GitHub Pages (repo name)
