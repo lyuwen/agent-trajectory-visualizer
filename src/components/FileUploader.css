@@ -1,0 +1,38 @@
+.uploader-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    background: radial-gradient(circle at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+}
+
+.dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    border: 2px dashed var(--border-color);
+    border-radius: 1rem;
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    color: var(--text-secondary);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    width: 600px;
+    max-width: 90%;
+}
+
+.dropzone:hover,
+.dropzone.active {
+    border-color: var(--accent-color);
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--text-primary);
+    transform: scale(1.02);
+}
+
+.dropzone .icon {
+    margin-bottom: 1.5rem;
+    color: var(--accent-color);
+}
