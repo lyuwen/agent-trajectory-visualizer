@@ -20,14 +20,12 @@ const Message = ({ message }) => {
                     <Icon size={16} />
                     <span>{message.role}</span>
                 </div>
-                {isSystem && (
-                    <div className="expand-icon">
-                        {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    </div>
-                )}
+                <div className="expand-icon">
+                    {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                </div>
             </div>
 
-            {(isExpanded || !isSystem) && (
+            {isExpanded && (
                 <div className="message-content">
                     {message.content && (
                         <div className="markdown-body">
