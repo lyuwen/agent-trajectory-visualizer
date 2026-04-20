@@ -1,4 +1,47 @@
 .app {
   width: 100%;
   min-height: 100vh;
+  position: relative;
+  outline: none;
+}
+
+.drag-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(99, 102, 241, 0.12);
+  border: 3px dashed var(--accent-color);
+  color: var(--text-primary);
+  font-size: 1.25rem;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 800;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.fab:hover {
+  background: var(--accent-color);
+  color: var(--text-primary);
+  border-color: var(--accent-color);
+  transform: scale(1.1);
 }
