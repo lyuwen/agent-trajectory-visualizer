@@ -6,38 +6,68 @@ import TrajectoryViewer from './components/TrajectoryViewer';
 import Notifications from './components/Notifications';
 import './App.css';
 
-let notificationId = 0;
+const MAX_NOTIFICATIONS = 5;
 
 function App() {
   const [fileData, setFileData] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const fileInputRef = useRef(null);
+  const idRef = useRef(0);
+  const timersRef = useRef(new Map());
 
-  const addNotification = useCallback((message) => {
-    const id = ++notificationId;
-    setNotifications((prev) => [...prev, { id, message, fading: false }]);
-
-    setTimeout(() => {
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, fading: true } : n))
-      );
-      setTimeout(() => {
-        setNotifications((prev) => prev.filter((n) => n.id !== id));
-      }, 500);
-    }, 5000);
+  const removeNotification = useCallback((id) => {
+    const timers = timersRef.current.get(id);
+    if (timers) {
+      clearTimeout(timers.fade);
+      clearTimeout(timers.remove);
+      timersRef.current.delete(id);
+    }
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
   }, []);
 
-  const dismissNotification = useCallback((id) => {
+  const startFade = useCallback((id) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, fading: true } : n))
     );
-    setTimeout(() => {
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
-    }, 500);
-  }, []);
+    const removeTimer = setTimeout(() => removeNotification(id), 500);
+    const existing = timersRef.current.get(id);
+    if (existing) {
+      timersRef.current.set(id, { ...existing, remove: removeTimer });
+    }
+  }, [removeNotification]);
+
+  const addNotification = useCallback((message) => {
+    const id = ++idRef.current;
+    setNotifications((prev) => {
+      const next = [...prev, { id, message, fading: false }];
+      if (next.length > MAX_NOTIFICATIONS) {
+        const evicted = next.slice(0, next.length - MAX_NOTIFICATIONS);
+        for (const n of evicted) {
+          const t = timersRef.current.get(n.id);
+          if (t) {
+            clearTimeout(t.fade);
+            clearTimeout(t.remove);
+            timersRef.current.delete(n.id);
+          }
+        }
+        return next.slice(-MAX_NOTIFICATIONS);
+      }
+      return next;
+    });
+
+    const fadeTimer = setTimeout(() => startFade(id), 5000);
+    timersRef.current.set(id, { fade: fadeTimer, remove: null });
+  }, [startFade]);
+
+  const dismissNotification = useCallback((id) => {
+    const timers = timersRef.current.get(id);
+    if (timers) clearTimeout(timers.fade);
+    startFade(id);
+  }, [startFade]);
 
   const handleFile = useCallback(
     (file) => {
+      // Fallback check — some browsers don't enforce accept on <input type="file">
       if (!file.name.endsWith('.json') && file.type !== 'application/json') {
         addNotification(`"${file.name}" is not a supported file type. Please drop a JSON file.`);
         return;
