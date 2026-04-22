@@ -19,7 +19,6 @@
     backdrop-filter: blur(var(--glass-blur));
     color: var(--text-secondary);
     transition: all 0.3s ease;
-    cursor: pointer;
     width: 600px;
     max-width: 90%;
 }
