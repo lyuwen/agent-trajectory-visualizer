@@ -8,6 +8,7 @@ import './TrajectoryViewer.css';
 const TrajectoryViewer = ({
   data,
   title = 'Agent Trajectory',
+  showTitle = true,
   variant = 'full',
   containerRef,
 }) => {
@@ -23,7 +24,7 @@ const TrajectoryViewer = ({
       <div className={clsx('trajectory-scroll', `trajectory-scroll--${variant}`)} ref={containerRef}>
         <div className="trajectory-container">
           <div className="viewer-header">
-            <h1>{title}</h1>
+            {showTitle && <h1>{title}</h1>}
             <div className="meta">
               Instance ID: <span className="id-tag">{data.instance_id}</span>
             </div>

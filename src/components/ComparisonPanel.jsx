@@ -54,10 +54,11 @@ const ComparisonPanel = ({
             tabIndex={0}
           />
           <div className="comparison-panel__header">
-            <div>
-              <p className="comparison-panel__eyebrow">Comparison</p>
-              <h2>Second trajectory</h2>
-            </div>
+            {showScrollToggle ? (
+              <ScrollLockButton locked={scrollLocked} onClick={onToggleScroll} compact />
+            ) : (
+              <div className="comparison-panel__header-spacer" />
+            )}
             <div className="comparison-panel__actions">
               {data && (
                 <button
@@ -86,19 +87,13 @@ const ComparisonPanel = ({
             </div>
           </div>
 
-          <div className="comparison-panel__toolbar">
-            {showScrollToggle && (
-              <ScrollLockButton locked={scrollLocked} onClick={onToggleScroll} compact />
-            )}
-          </div>
-
           <div className="comparison-panel__body" id="comparison-panel-body">
             <input {...getInputProps()} />
             {data ? (
               <>
                 <TrajectoryViewer
                   data={data}
-                  title="Comparison trajectory"
+                  showTitle={false}
                   containerRef={scrollRef}
                   variant="panel"
                 />

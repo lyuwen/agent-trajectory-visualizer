@@ -8,7 +8,7 @@ import ComparisonPanel from './components/ComparisonPanel';
 import './App.css';
 
 const MAX_NOTIFICATIONS = 5;
-const DEFAULT_PANEL_WIDTH = 600;
+const DEFAULT_PANEL_WIDTH = Math.round(window.innerWidth / 2);
 const MIN_PANEL_WIDTH = 360;
 const MAX_PANEL_WIDTH = 900;
 const PANEL_GUTTER_WIDTH = 280;
