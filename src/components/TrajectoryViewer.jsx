@@ -11,6 +11,7 @@ const TrajectoryViewer = ({
   showTitle = true,
   variant = 'full',
   containerRef,
+  onFocus,
 }) => {
   const processedMessages = useMemo(() => {
     if (!data?.messages) return [];
@@ -23,7 +24,6 @@ const TrajectoryViewer = ({
 
   const messagesWithTurns = useMemo(() => {
     let assistantTurnCount = 0;
-    let currentTurnIndex = 0;
 
     return processedMessages.map((msg) => {
       if (msg.role === 'system') {
@@ -32,8 +32,7 @@ const TrajectoryViewer = ({
 
       if (msg.role === 'assistant') {
         assistantTurnCount++;
-        currentTurnIndex = assistantTurnCount;
-        return { ...msg, turnIndex: currentTurnIndex };
+        return { ...msg, turnIndex: assistantTurnCount };
       }
 
       if (msg.role === 'user') {
@@ -52,7 +51,12 @@ const TrajectoryViewer = ({
 
   return (
     <div className={clsx('trajectory-wrapper', `trajectory-wrapper--${variant}`)}>
-      <div className={clsx('trajectory-scroll', `trajectory-scroll--${variant}`)} ref={containerRef}>
+      <div
+        className={clsx('trajectory-scroll', `trajectory-scroll--${variant}`)}
+        ref={containerRef}
+        tabIndex={0}
+        onFocus={onFocus}
+      >
         <div className="trajectory-container">
           <div className="viewer-header">
             {showTitle && <h1>{title}</h1>}

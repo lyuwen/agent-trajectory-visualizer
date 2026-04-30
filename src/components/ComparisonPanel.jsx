@@ -25,6 +25,7 @@ const ComparisonPanel = ({
   onToggleScroll,
   showScrollToggle,
   scrollRef,
+  onFocus,
 }) => {
   const rootProps = getRootProps({ className: 'comparison-panel' });
   const stopPanelClick = (event) => event.stopPropagation();
@@ -96,6 +97,7 @@ const ComparisonPanel = ({
                   showTitle={false}
                   containerRef={scrollRef}
                   variant="panel"
+                  onFocus={onFocus}
                 />
                 {isDragActive && (
                   <div className="comparison-panel__drag-overlay">

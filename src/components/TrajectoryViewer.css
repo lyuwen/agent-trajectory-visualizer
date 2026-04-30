@@ -17,6 +17,15 @@
     min-height: 100vh;
 }
 
+.trajectory-scroll:focus {
+    outline: none;
+}
+
+.trajectory-scroll:focus-visible {
+    outline: 2px solid rgba(99, 102, 241, 0.5);
+    outline-offset: -2px;
+}
+
 .trajectory-scroll--full {
     padding: 2rem;
     padding-top: 4rem;

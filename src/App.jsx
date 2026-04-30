@@ -40,6 +40,7 @@ function App() {
   const scrollOffsetRef = useRef(0);
   const scrollBaselineRef = useRef('left');
   const resizeStateRef = useRef(null);
+  const [focusedPanel, setFocusedPanel] = useState('left');
 
   const removeNotification = useCallback((id) => {
     const timers = timersRef.current.get(id);
@@ -313,6 +314,66 @@ function App() {
   }, []);
 
   useEffect(() => {
+    const handleKeyDown = (event) => {
+      // Only handle arrow keys when not typing in an input/textarea
+      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
+        return;
+      }
+
+      event.preventDefault();
+
+      const scrollContainer = focusedPanel === 'left' ? leftScrollRef.current : rightScrollRef.current;
+      if (!scrollContainer) return;
+
+      const messages = scrollContainer.querySelectorAll('.message-container');
+      if (messages.length === 0) return;
+
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const containerTop = containerRect.top;
+      const containerBottom = containerRect.bottom;
+      const containerMid = (containerTop + containerBottom) / 2;
+
+      let targetMessage = null;
+
+      if (event.key === 'ArrowDown') {
+        // Find the first message whose top is below the container middle
+        for (const msg of messages) {
+          const msgRect = msg.getBoundingClientRect();
+          if (msgRect.top > containerMid + 10) {
+            targetMessage = msg;
+            break;
+          }
+        }
+      } else {
+        // ArrowUp: Find the last message whose top is above the container middle
+        for (let i = messages.length - 1; i >= 0; i--) {
+          const msg = messages[i];
+          const msgRect = msg.getBoundingClientRect();
+          if (msgRect.top < containerMid - 10) {
+            targetMessage = msg;
+            break;
+          }
+        }
+      }
+
+      if (targetMessage) {
+        const targetTop = targetMessage.offsetTop;
+        scrollContainer.scrollTo({
+          top: targetTop - 80,
+          behavior: 'smooth',
+        });
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [focusedPanel]);
+
+  useEffect(() => {
     const leftNode = leftScrollRef.current;
     const rightNode = rightScrollRef.current;
 
@@ -383,6 +444,7 @@ function App() {
                   title={comparisonOpen ? 'Primary trajectory' : 'Agent Trajectory'}
                   containerRef={leftScrollRef}
                   variant={comparisonOpen ? 'panel' : 'full'}
+                  onFocus={() => setFocusedPanel('left')}
                 />
                 {isDragActive && (
                   <div className="drag-overlay drag-overlay--primary">
@@ -428,6 +490,7 @@ function App() {
               onToggleScroll={toggleScrollLock}
               showScrollToggle={!!(leftFileData && rightFileData)}
               scrollRef={rightScrollRef}
+              onFocus={() => setFocusedPanel('right')}
             />
           </>
         )}
