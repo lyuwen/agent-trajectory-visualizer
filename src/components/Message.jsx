@@ -31,7 +31,7 @@ const Message = ({ message }) => {
                         <div className="markdown-body">
                             <ReactMarkdown
                                 components={{
-                                    code({ node, inline, className, children, ...props }) {
+                                    code({ inline, className, children, ...props }) {
                                         const match = /language-(\w+)/.exec(className || '')
                                         return !inline && match ? (
                                             <SyntaxHighlighter

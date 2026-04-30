@@ -13,7 +13,7 @@ const ToolCall = ({ toolCall }) => {
     let parsedArgs = {};
     try {
         parsedArgs = JSON.parse(fn.arguments);
-    } catch (e) {
+    } catch {
         parsedArgs = { raw: fn.arguments };
     }
     const argsJson = JSON.stringify(parsedArgs, null, 2);
@@ -25,7 +25,7 @@ const ToolCall = ({ toolCall }) => {
             const parsed = JSON.parse(outputContent);
             outputContent = JSON.stringify(parsed, null, 2);
         }
-    } catch (e) {
+    } catch {
         // Not JSON, keep as is
     }
 
@@ -46,7 +46,7 @@ const ToolCall = ({ toolCall }) => {
                     <div className="markdown-body">
                         <ReactMarkdown
                             components={{
-                                code({ node, inline, className, children, ...props }) {
+                                code({ inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '')
                                     return !inline && match ? (
                                         <SyntaxHighlighter
@@ -77,7 +77,7 @@ const ToolCall = ({ toolCall }) => {
                     <div className="markdown-body">
                         <ReactMarkdown
                             components={{
-                                code({ node, inline, className, children, ...props }) {
+                                code({ inline, className, children, ...props }) {
                                     const match = /language-(\w+)/.exec(className || '')
                                     return !inline && match ? (
                                         <SyntaxHighlighter

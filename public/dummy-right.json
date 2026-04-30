@@ -1,0 +1,22 @@
+{
+  "instance_id": "dummy-right-run",
+  "messages": [
+    { "role": "system", "content": "You are a coding agent." },
+    { "role": "user", "content": "Implement a navbar." },
+    { "role": "assistant", "content": "I'll compare multiple approaches." },
+    { "role": "assistant", "content": "First I explored the existing header styles." },
+    { "role": "assistant", "content": "Then I tested a compact layout for mobile." },
+    { "role": "assistant", "content": "I updated the menu button interactions." },
+    { "role": "assistant", "content": "I adjusted the animation timing." },
+    { "role": "assistant", "content": "I verified the focus styles." },
+    { "role": "assistant", "content": "I ran a final browser check." },
+    { "role": "assistant", "content": "This version favors a denser desktop layout." },
+    { "role": "assistant", "content": "I tested overflow behavior in the message list." },
+    { "role": "assistant", "content": "The patch output is longer in this run." },
+    { "role": "assistant", "content": "I verified the panel still scrolls smoothly." },
+    { "role": "assistant", "content": "The final diff is ready for review." }
+  ],
+  "test_result": {
+    "git_patch": "diff --git a/src/Nav.jsx b/src/Nav.jsx\n+ alternative navbar changes\n"
+  }
+}

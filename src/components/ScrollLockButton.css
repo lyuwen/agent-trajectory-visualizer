@@ -1,0 +1,58 @@
+.scroll-lock-button {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 5.25rem;
+  z-index: 820;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s ease;
+}
+
+.scroll-lock-button--compact {
+  position: static;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+  width: 100%;
+  justify-content: center;
+  box-shadow: none;
+}
+
+.scroll-lock-button:hover,
+.scroll-lock-button.is-locked {
+  border-color: var(--accent-color);
+  background: rgba(99, 102, 241, 0.16);
+}
+
+.scroll-lock-button span {
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .scroll-lock-button {
+    right: 1rem;
+    bottom: 4.75rem;
+    padding: 0.7rem 0.9rem;
+  }
+
+  .scroll-lock-button--compact {
+    right: auto;
+    bottom: auto;
+  }
+
+  .scroll-lock-button span {
+    display: none;
+  }
+
+  .scroll-lock-button--compact span {
+    display: inline;
+  }
+}

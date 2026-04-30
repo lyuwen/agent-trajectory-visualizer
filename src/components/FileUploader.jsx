@@ -3,16 +3,17 @@ import { UploadCloud } from 'lucide-react';
 import clsx from 'clsx';
 import './FileUploader.css';
 
-const FileUploader = ({ isDragActive }) => {
+const FileUploader = ({
+  isDragActive,
+  variant = 'fullscreen',
+  idleText = "Drag 'n' drop a JSON file here, or click to select one",
+  activeText = 'Drop the JSON file here ...',
+}) => {
   return (
-    <div className="uploader-container">
-      <div className={clsx('dropzone', isDragActive && 'active')}>
-        <UploadCloud size={64} className="icon" />
-        {isDragActive ? (
-          <p>Drop the JSON file here ...</p>
-        ) : (
-          <p>Drag 'n' drop a JSON file here, or click to select one</p>
-        )}
+    <div className={`uploader-container uploader-container--${variant}`}>
+      <div className={clsx('dropzone', `dropzone--${variant}`, isDragActive && 'active')}>
+        <UploadCloud size={variant === 'panel' ? 40 : 64} className="icon" />
+        <p>{isDragActive ? activeText : idleText}</p>
       </div>
     </div>
   );

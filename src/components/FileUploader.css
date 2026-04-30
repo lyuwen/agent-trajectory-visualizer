@@ -7,6 +7,13 @@
     background: radial-gradient(circle at center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
 }
 
+.uploader-container--panel {
+    height: 100%;
+    min-height: 320px;
+    background: transparent;
+    padding: 1.25rem;
+}
+
 .dropzone {
     display: flex;
     flex-direction: column;
@@ -29,6 +36,17 @@
     background: rgba(99, 102, 241, 0.1);
     color: var(--text-primary);
     transform: scale(1.02);
+}
+
+.dropzone--panel {
+    width: 100%;
+    min-height: 280px;
+    padding: 2.5rem 1.5rem;
+    max-width: none;
+}
+
+.dropzone--panel p {
+    text-align: center;
 }
 
 .dropzone .icon {

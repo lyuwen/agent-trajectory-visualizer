@@ -1,0 +1,19 @@
+{
+  "instance_id": "dummy-left-run",
+  "messages": [
+    { "role": "system", "content": "You are a coding agent." },
+    { "role": "user", "content": "Implement a navbar." },
+    { "role": "assistant", "content": "I'll inspect the codebase first." },
+    { "role": "assistant", "content": "I found the header component and updated it." },
+    { "role": "assistant", "content": "I tested the result in the browser." },
+    { "role": "assistant", "content": "The navbar now supports mobile collapse." },
+    { "role": "assistant", "content": "I also cleaned up the spacing and alignment." },
+    { "role": "assistant", "content": "The final diff is ready for review." },
+    { "role": "assistant", "content": "I verified keyboard navigation behavior." },
+    { "role": "assistant", "content": "Spacing looks consistent across breakpoints." },
+    { "role": "assistant", "content": "This run is ready for comparison." }
+  ],
+  "test_result": {
+    "git_patch": "diff --git a/src/Nav.jsx b/src/Nav.jsx\n+ added navbar changes\n"
+  }
+}
