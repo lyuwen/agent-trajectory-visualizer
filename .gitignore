@@ -24,4 +24,9 @@ dist-ssr
 *.sw?
 *.history.json*
 
+# Claude Code and development tools
+.claude/
+.playwright-mcp/
+.worktrees/
+
 examples/*
