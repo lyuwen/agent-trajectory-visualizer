@@ -19,6 +19,9 @@ const Message = ({ message }) => {
                 <div className="role-badge">
                     <Icon size={16} />
                     <span>{message.role}</span>
+                    {message.turnIndex !== null && message.turnIndex !== undefined && (
+                        <span className="message-index">Turn {message.turnIndex}</span>
+                    )}
                 </div>
                 <div className="expand-icon">
                     {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}

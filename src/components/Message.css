@@ -37,6 +37,13 @@
     color: var(--text-secondary);
 }
 
+.message-index {
+    font-size: 0.75rem;
+    font-weight: 500;
+    opacity: 0.6;
+    margin-left: 0.25rem;
+}
+
 .message-container.user .role-badge {
     color: #38bdf8;
 }
