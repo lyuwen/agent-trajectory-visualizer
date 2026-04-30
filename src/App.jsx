@@ -334,36 +334,36 @@ function App() {
 
       const containerRect = scrollContainer.getBoundingClientRect();
       const containerTop = containerRect.top;
-      const containerBottom = containerRect.bottom;
-      const containerMid = (containerTop + containerBottom) / 2;
 
-      let targetMessage = null;
+      let currentIndex = 0;
+      let minDistance = Infinity;
 
-      if (event.key === 'ArrowDown') {
-        // Find the first message whose top is below the container middle
-        for (const msg of messages) {
-          const msgRect = msg.getBoundingClientRect();
-          if (msgRect.top > containerMid + 10) {
-            targetMessage = msg;
-            break;
-          }
-        }
-      } else {
-        // ArrowUp: Find the last message whose top is above the container middle
-        for (let i = messages.length - 1; i >= 0; i--) {
-          const msg = messages[i];
-          const msgRect = msg.getBoundingClientRect();
-          if (msgRect.top < containerMid - 10) {
-            targetMessage = msg;
-            break;
-          }
+      // Find the message whose top edge is closest to the container's top edge
+      // This identifies which message is most prominently at the top of the viewport
+      for (let i = 0; i < messages.length; i++) {
+        const msgRect = messages[i].getBoundingClientRect();
+        const distance = Math.abs(msgRect.top - containerTop);
+        if (distance < minDistance) {
+          minDistance = distance;
+          currentIndex = i;
         }
       }
 
-      if (targetMessage) {
+      let targetIndex = -1;
+
+      if (event.key === 'ArrowDown') {
+        // Move to next message
+        targetIndex = Math.min(currentIndex + 1, messages.length - 1);
+      } else {
+        // ArrowUp: Move to previous message
+        targetIndex = Math.max(currentIndex - 1, 0);
+      }
+
+      if (targetIndex >= 0 && targetIndex < messages.length) {
+        const targetMessage = messages[targetIndex];
         const targetTop = targetMessage.offsetTop;
         scrollContainer.scrollTo({
-          top: targetTop - 80,
+          top: targetTop,
           behavior: 'smooth',
         });
       }

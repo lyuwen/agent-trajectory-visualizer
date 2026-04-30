@@ -1,0 +1,5 @@
+- generic [ref=e3]:
+  - button "Choose File" [ref=e4]
+  - generic [ref=e6]:
+    - img [ref=e7]
+    - paragraph [ref=e10]: Drag 'n' drop a JSON file here, or click to select one
