@@ -1,0 +1,100 @@
+.tools-info {
+  position: relative;
+  display: inline-block;
+}
+
+.tools-count {
+  color: var(--text-secondary);
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.tools-count:hover {
+  color: var(--text-primary);
+}
+
+/* Tooltip container - hidden by default */
+.tools-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  pointer-events: none;
+  z-index: 1000;
+  min-width: 300px;
+  max-width: 500px;
+}
+
+/* Show tooltip on hover */
+.tools-info:hover .tools-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Glassmorphism tooltip styling */
+.tools-list {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Custom scrollbar for dark theme */
+.tools-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tools-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.tools-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.tools-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Individual tool item */
+.tool-item {
+  padding: 8px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.tool-item:last-child {
+  border-bottom: none;
+}
+
+.tool-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.tool-description {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Tooltip arrow */
+.tools-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--glass-bg);
+}
