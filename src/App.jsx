@@ -5,6 +5,8 @@ import FileUploader from './components/FileUploader';
 import TrajectoryViewer from './components/TrajectoryViewer';
 import Notifications from './components/Notifications';
 import ComparisonPanel from './components/ComparisonPanel';
+import TrajectorySidebar from './components/TrajectorySidebar';
+import { isJSONL, parseJSONL } from './helpers';
 import './App.css';
 
 const MAX_NOTIFICATIONS = 5;
@@ -24,6 +26,12 @@ const clampPanelWidth = (width, viewportWidth) =>
 function App() {
   const [leftFileData, setLeftFileData] = useState(null);
   const [rightFileData, setRightFileData] = useState(null);
+  const [leftTrajectories, setLeftTrajectories] = useState([]);
+  const [rightTrajectories, setRightTrajectories] = useState([]);
+  const [leftSelectedIndex, setLeftSelectedIndex] = useState(0);
+  const [rightSelectedIndex, setRightSelectedIndex] = useState(0);
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [scrollLocked, setScrollLocked] = useState(false);
   const [panelWidth, setPanelWidth] = useState(DEFAULT_PANEL_WIDTH);
@@ -94,8 +102,8 @@ function App() {
 
   const parseFileToTarget = useCallback(
     (file, target) => {
-      if (!file.name.endsWith('.json') && file.type !== 'application/json') {
-        addNotification(`"${file.name}" is not a supported file type. Please drop a JSON file.`);
+      if (!file.name.endsWith('.json') && !file.name.endsWith('.jsonl') && file.type !== 'application/json') {
+        addNotification(`"${file.name}" is not a supported file type. Please drop a JSON or JSONL file.`);
         return;
       }
 
@@ -103,12 +111,43 @@ function App() {
       reader.onerror = () => addNotification(`Failed to read "${file.name}".`);
       reader.onload = () => {
         try {
-          const json = JSON.parse(reader.result);
-          if (target === 'left') {
-            setLeftFileData(json);
+          const content = reader.result;
+
+          // Detect if JSONL or single JSON
+          if (isJSONL(content)) {
+            const trajectories = parseJSONL(content);
+            if (trajectories.length === 0) {
+              addNotification(`"${file.name}" contains no valid trajectories.`);
+              return;
+            }
+
+            if (target === 'left') {
+              setLeftTrajectories(trajectories);
+              setLeftFileData(trajectories[0]);
+              setLeftSelectedIndex(0);
+              setLeftSidebarOpen(trajectories.length > 1);
+            } else {
+              setRightTrajectories(trajectories);
+              setRightFileData(trajectories[0]);
+              setRightSelectedIndex(0);
+              setRightSidebarOpen(trajectories.length > 1);
+              setComparisonOpen(true);
+            }
           } else {
-            setRightFileData(json);
-            setComparisonOpen(true);
+            // Single JSON object
+            const json = JSON.parse(content);
+            if (target === 'left') {
+              setLeftTrajectories([json]);
+              setLeftFileData(json);
+              setLeftSelectedIndex(0);
+              setLeftSidebarOpen(false);
+            } else {
+              setRightTrajectories([json]);
+              setRightFileData(json);
+              setRightSelectedIndex(0);
+              setRightSidebarOpen(false);
+              setComparisonOpen(true);
+            }
           }
         } catch (err) {
           addNotification(`Failed to parse "${file.name}": ${err.message}`);
@@ -123,7 +162,7 @@ function App() {
     (accepted, rejected) => {
       if (rejected.length > 0 && accepted.length === 0) {
         const name = rejected[0]?.file?.name || 'file';
-        addNotification(`"${name}" is not a supported file type. Please drop a JSON file.`);
+        addNotification(`"${name}" is not a supported file type. Please drop a JSON or JSONL file.`);
         return;
       }
       if (accepted.length > 0) {
@@ -137,7 +176,7 @@ function App() {
     (accepted, rejected) => {
       if (rejected.length > 0 && accepted.length === 0) {
         const name = rejected[0]?.file?.name || 'file';
-        addNotification(`"${name}" is not a supported file type. Please drop a JSON file.`);
+        addNotification(`"${name}" is not a supported file type. Please drop a JSON or JSONL file.`);
         return;
       }
       if (accepted.length > 0) {
@@ -149,7 +188,7 @@ function App() {
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: onLeftDrop,
-    accept: { 'application/json': ['.json'] },
+    accept: { 'application/json': ['.json', '.jsonl'] },
     noClick: !!leftFileData,
     noKeyboard: !!leftFileData,
     multiple: false,
@@ -157,7 +196,7 @@ function App() {
 
   const rightDropzone = useDropzone({
     onDrop: onRightDrop,
-    accept: { 'application/json': ['.json'] },
+    accept: { 'application/json': ['.json', '.jsonl'] },
     noClick: !!rightFileData,
     noKeyboard: true,
     noDragEventsBubbling: true,
@@ -437,6 +476,19 @@ function App() {
           <FileUploader isDragActive={isDragActive} />
         ) : (
           <>
+            {leftTrajectories.length > 1 && (
+              <TrajectorySidebar
+                trajectories={leftTrajectories}
+                selectedIndex={leftSelectedIndex}
+                onSelect={(index) => {
+                  setLeftSelectedIndex(index);
+                  setLeftFileData(leftTrajectories[index]);
+                }}
+                isOpen={leftSidebarOpen}
+                onToggle={() => setLeftSidebarOpen(!leftSidebarOpen)}
+              />
+            )}
+
             <div className="app-shell">
               <div className="primary-pane">
                 <TrajectoryViewer
@@ -491,6 +543,14 @@ function App() {
               showScrollToggle={!!(leftFileData && rightFileData)}
               scrollRef={rightScrollRef}
               onFocus={() => setFocusedPanel('right')}
+              trajectories={rightTrajectories}
+              selectedIndex={rightSelectedIndex}
+              onSelectTrajectory={(index) => {
+                setRightSelectedIndex(index);
+                setRightFileData(rightTrajectories[index]);
+              }}
+              sidebarOpen={rightSidebarOpen}
+              onToggleSidebar={() => setRightSidebarOpen(!rightSidebarOpen)}
             />
           </>
         )}
@@ -499,14 +559,14 @@ function App() {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".json,application/json"
+        accept=".json,.jsonl,application/json"
         onChange={handleLeftFabChange}
         style={{ display: 'none' }}
       />
       <input
         ref={rightFileInputRef}
         type="file"
-        accept=".json,application/json"
+        accept=".json,.jsonl,application/json"
         onChange={handleRightFabChange}
         style={{ display: 'none' }}
       />

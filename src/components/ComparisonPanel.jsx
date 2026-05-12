@@ -4,6 +4,7 @@ import { FolderOpen, Plus, X } from 'lucide-react';
 import FileUploader from './FileUploader';
 import TrajectoryViewer from './TrajectoryViewer';
 import ScrollLockButton from './ScrollLockButton';
+import TrajectorySidebar from './TrajectorySidebar';
 import './ComparisonPanel.css';
 
 const MotionAside = motion.aside;
@@ -26,6 +27,11 @@ const ComparisonPanel = ({
   showScrollToggle,
   scrollRef,
   onFocus,
+  trajectories = [],
+  selectedIndex = 0,
+  onSelectTrajectory,
+  sidebarOpen = false,
+  onToggleSidebar,
 }) => {
   const rootProps = getRootProps({ className: 'comparison-panel' });
   const stopPanelClick = (event) => event.stopPropagation();
@@ -92,6 +98,15 @@ const ComparisonPanel = ({
             <input {...getInputProps()} />
             {data ? (
               <>
+                {trajectories.length > 1 && (
+                  <TrajectorySidebar
+                    trajectories={trajectories}
+                    selectedIndex={selectedIndex}
+                    onSelect={onSelectTrajectory}
+                    isOpen={sidebarOpen}
+                    onToggle={onToggleSidebar}
+                  />
+                )}
                 <TrajectoryViewer
                   data={data}
                   showTitle={false}
