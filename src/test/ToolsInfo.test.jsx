@@ -129,6 +129,9 @@ describe('ToolsInfo Component', () => {
     expect(screen.getByText('3 tools')).toBeInTheDocument();
     // Should render the valid tool name
     expect(screen.getByText('bash')).toBeInTheDocument();
+    // Should render fallback for malformed tools
+    expect(screen.getByText('Unknown tool')).toBeInTheDocument();
+    expect(screen.getByText('read_file')).toBeInTheDocument();
   });
 
   it('renders multiple tools in tooltip', () => {
