@@ -125,8 +125,10 @@ describe('ToolsInfo Component', () => {
       },
     ];
     render(<ToolsInfo tools={tools} />);
-    // Should still render the valid tool
-    expect(screen.getByText(/tool/)).toBeInTheDocument();
+    // Should still render with count (3 tools total, even if some are malformed)
+    expect(screen.getByText('3 tools')).toBeInTheDocument();
+    // Should render the valid tool name
+    expect(screen.getByText('bash')).toBeInTheDocument();
   });
 
   it('renders multiple tools in tooltip', () => {

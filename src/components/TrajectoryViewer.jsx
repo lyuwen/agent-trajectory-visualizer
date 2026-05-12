@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import clsx from 'clsx';
 import Message from './Message';
 import PatchViewer from './PatchViewer';
+import ToolsInfo from './ToolsInfo';
 import { processMessages } from '../helpers';
 import './TrajectoryViewer.css';
 
@@ -64,6 +65,12 @@ const TrajectoryViewer = ({
               Instance ID: <span className="id-tag">{data.instance_id}</span>
               {' · '}
               <span className="turn-count">{assistantTurnCount} turns</span>
+              {data.tools && data.tools.length > 0 && (
+                <>
+                  {' · '}
+                  <ToolsInfo tools={data.tools} />
+                </>
+              )}
             </div>
           </div>
 
