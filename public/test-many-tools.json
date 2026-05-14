@@ -1,0 +1,76 @@
+{
+  "instance_id": "test-many-tools",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "bash",
+        "description": "Execute bash commands in the terminal. Use this for running scripts, checking file contents, installing packages, and other command-line operations. Supports piping, redirection, and complex shell operations."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "Custom editing tool for viewing, creating and editing files in plain-text format. State is persistent across command calls. Use this for reading files, creating new files, and making precise edits to existing code."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "python",
+        "description": "Execute Python code in an isolated environment. Useful for data analysis, calculations, and quick prototyping. Has access to common libraries like numpy, pandas, and matplotlib."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "web_search",
+        "description": "Search the web for current information, documentation, and answers to questions. Returns relevant snippets and URLs from search results."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "read_file",
+        "description": "Read the contents of a file from the filesystem. Supports text files, JSON, YAML, and other common formats. Can read specific line ranges for large files."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "write_file",
+        "description": "Write content to a file on the filesystem. Creates new files or overwrites existing ones. Automatically creates parent directories if they don't exist."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "list_directory",
+        "description": "List files and directories in a given path. Supports recursive listing and filtering by file extension or pattern."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "git_operations",
+        "description": "Perform git operations like commit, push, pull, branch, merge, and status. Helps manage version control workflows."
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "finish",
+        "description": "Signal that the task is complete. Use this when you have successfully completed the user's request and are ready to end the session."
+      }
+    }
+  ],
+  "messages": [
+    { "role": "system", "content": "You are a helpful coding assistant with access to many tools." },
+    { "role": "user", "content": "Help me build a web scraper." },
+    { "role": "assistant", "content": "I'll help you build a web scraper. Let me start by checking what libraries are available." }
+  ],
+  "test_result": {
+    "git_patch": ""
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "instance_id": "test-tools-display",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "Custom editing tool for viewing, creating and editing files. Supports viewing, creating, and editing files with string replacement operations.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string",
+              "enum": ["view", "create", "str_replace"]
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "terminal",
+        "description": "Execute bash commands in a persistent terminal session. Use this to run shell commands, scripts, and interact with the system.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "command": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "finish",
+        "description": "Signal that the task is complete and provide a final summary of the work done. This should be called when all objectives have been met.",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "summary": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "messages": [
+    { "role": "system", "content": "You are a coding agent with access to file editing and terminal tools." },
+    { "role": "user", "content": "Fix the bug in the authentication module." },
+    { "role": "assistant", "content": "I'll investigate the authentication module and fix the issue." }
+  ],
+  "test_result": {
+    "git_patch": "diff --git a/src/auth.js b/src/auth.js\n+ fixed authentication bug\n"
+  }
+}

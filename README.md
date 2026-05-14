@@ -15,6 +15,10 @@ A modern, offline-first React application to visualize agentic trajectories from
   - Collapsible tool details.
 - **Git Patch Viewer**:
   - Shows the final result git patch in a dedicated, syntax-highlighted folded panel.
+- **Tools Count Display**:
+  - Shows the number of tools available in the trajectory at the top of the viewer.
+  - Hover over the tools count to see a tooltip with tool names and descriptions.
+  - Automatically extracts tool information from the `tools` field in your trajectory JSON.
 
 ## Getting Started
 
@@ -33,6 +37,47 @@ A modern, offline-first React application to visualize agentic trajectories from
 
 4.  **Visualize**:
     Drag and drop your `*.history.json` file onto the upload area.
+
+## Trajectory JSON Format
+
+Your trajectory JSON file should follow this structure:
+
+```json
+{
+  "instance_id": "example-123",
+  "tools": [
+    {
+      "type": "function",
+      "function": {
+        "name": "bash",
+        "description": "Execute bash commands in the terminal"
+      }
+    },
+    {
+      "type": "function",
+      "function": {
+        "name": "str_replace_editor",
+        "description": "Edit files using string replacement"
+      }
+    }
+  ],
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a helpful assistant..."
+    },
+    {
+      "role": "user",
+      "content": "Please help me with..."
+    }
+  ]
+}
+```
+
+**Key Fields:**
+- `instance_id` (optional): Identifier for the trajectory, displayed in the header.
+- `tools` (optional): Array of tool definitions. Each tool should have a `type` and `function` object with `name` and `description`.
+- `messages` (required): Array of conversation messages with `role` and `content`.
 
 ## Technologies
 
