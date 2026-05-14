@@ -5,42 +5,55 @@
 
 .tools-count {
   color: var(--text-secondary);
-  cursor: help;
+  cursor: pointer;
   transition: color 0.2s ease;
+  user-select: none;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 .tools-count:hover {
   color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-/* Tooltip container - hidden by default */
-.tools-tooltip {
+/* Popup container - shows on hover or when locked by click */
+.tools-popup {
   position: absolute;
-  bottom: calc(100% + 8px);
   left: 50%;
   transform: translateX(-50%);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
-  pointer-events: none;
   z-index: 1000;
-  min-width: 300px;
-  max-width: 500px;
+  min-width: 200px;
+  max-width: 300px;
+  animation: fadeIn 0.15s ease;
 }
 
-/* Show tooltip on hover */
-.tools-info:hover .tools-tooltip {
-  opacity: 1;
-  visibility: visible;
+.tools-popup.above {
+  bottom: calc(100% + 8px);
 }
 
-/* Glassmorphism tooltip styling */
+.tools-popup.below {
+  top: calc(100% + 8px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Glassmorphism popup styling */
 .tools-list {
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: 8px;
-  padding: 12px;
+  padding: 8px;
   max-height: 400px;
   overflow-y: auto;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
@@ -48,17 +61,17 @@
 
 /* Custom scrollbar for dark theme */
 .tools-list::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .tools-list::-webkit-scrollbar-track {
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .tools-list::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .tools-list::-webkit-scrollbar-thumb:hover {
@@ -67,34 +80,95 @@
 
 /* Individual tool item */
 .tool-item {
-  padding: 8px;
-  border-bottom: 1px solid var(--glass-border);
+  position: relative;
+  padding: 8px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease;
 }
 
-.tool-item:last-child {
-  border-bottom: none;
+.tool-item:hover {
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .tool-name {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-primary);
-  margin-bottom: 4px;
   font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.tool-description {
+/* Description tooltip - appears OUTSIDE the tool names pane */
+.tool-description-tooltip {
+  position: fixed;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  min-width: 300px;
+  max-width: 500px;
+  max-height: 400px;
+  overflow-y: auto;
   color: var(--text-secondary);
-  font-size: 0.85rem;
-  line-height: 1.4;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  z-index: 1002;
+  animation: slideIn 0.15s ease;
+  pointer-events: auto;
+  cursor: default;
 }
 
-/* Tooltip arrow */
-.tools-tooltip::after {
+/* Custom scrollbar for description tooltip */
+.tool-description-tooltip::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tool-description-tooltip::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.tool-description-tooltip::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.tool-description-tooltip::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Popup arrow */
+.tools-popup.above::after {
   content: '';
   position: absolute;
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
   border: 6px solid transparent;
-  border-top-color: var(--glass-bg);
+  border-top-color: var(--glass-border);
+}
+
+.tools-popup.below::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-bottom-color: var(--glass-border);
 }

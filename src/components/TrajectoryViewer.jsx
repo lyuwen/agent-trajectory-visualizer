@@ -63,14 +63,14 @@ const TrajectoryViewer = ({
             {showTitle && <h1>{title}</h1>}
             <div className="meta">
               Instance ID: <span className="id-tag">{data.instance_id}</span>
-              {' · '}
-              <span className="turn-count">{assistantTurnCount} turns</span>
               {data.tools && data.tools.length > 0 && (
                 <>
                   {' · '}
                   <ToolsInfo tools={data.tools} />
                 </>
               )}
+              {' · '}
+              <span className="turn-count">{assistantTurnCount} turns</span>
             </div>
           </div>
 
