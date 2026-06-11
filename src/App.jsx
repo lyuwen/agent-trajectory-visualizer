@@ -12,13 +12,24 @@ import './App.css';
 const MAX_NOTIFICATIONS = 5;
 const DEFAULT_PANEL_WIDTH = Math.round(window.innerWidth / 2);
 const MIN_PANEL_WIDTH = 360;
-const MAX_PANEL_WIDTH = 900;
 const PANEL_GUTTER_WIDTH = 280;
 const RESIZE_STEP = 20;
 const RESIZE_STEP_LARGE = 40;
+const SNAP_THRESHOLD = 20;
+const SNAP_FRACTIONS = [0.25, 0.5, 0.75];
+
+const snapPanelWidth = (width, viewportWidth) => {
+  for (const fraction of SNAP_FRACTIONS) {
+    const snapTarget = Math.round(viewportWidth * fraction);
+    if (Math.abs(width - snapTarget) <= SNAP_THRESHOLD) {
+      return snapTarget;
+    }
+  }
+  return width;
+};
 
 const getMaxPanelWidth = (viewportWidth) =>
-  Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, viewportWidth - PANEL_GUTTER_WIDTH));
+  Math.max(MIN_PANEL_WIDTH, Math.round(Math.min(viewportWidth * 0.6, viewportWidth - PANEL_GUTTER_WIDTH)));
 
 const clampPanelWidth = (width, viewportWidth) =>
   Math.min(getMaxPanelWidth(viewportWidth), Math.max(MIN_PANEL_WIDTH, width));
@@ -325,8 +336,9 @@ function App() {
         return;
       }
 
-      const nextWidth = resizeState.startWidth - (event.clientX - resizeState.startX);
-      setPanelWidth(clampPanelWidth(nextWidth, window.innerWidth));
+      const rawWidth = resizeState.startWidth - (event.clientX - resizeState.startX);
+      const snapped = snapPanelWidth(rawWidth, window.innerWidth);
+      setPanelWidth(clampPanelWidth(snapped, window.innerWidth));
     };
 
     const handleViewportResize = () => {
