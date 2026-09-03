@@ -1,10 +1,45 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import AnsiToHtml from 'ansi-to-html';
 import { Terminal, ChevronRight, ChevronDown, CheckCircle, XCircle, FileText, Brain, Flag } from 'lucide-react';
 import clsx from 'clsx';
 import './ToolCall.css';
+
+const ANSI_CONVERTER_OPTS = {
+    fg: '#d4d4d4',
+    bg: '#1e1e1e',
+    newline: true,
+    escapeXML: true,
+    stream: false,
+    colors: {
+        0: '#1e1e1e', 1: '#cd3131', 2: '#0dbc79', 3: '#e5e510',
+        4: '#2472c8', 5: '#bc3fbc', 6: '#11a8cd', 7: '#e5e5e5',
+        8: '#666666', 9: '#f14c4c', 10: '#23d18b', 11: '#f5f543',
+        12: '#3b8eea', 13: '#d670d6', 14: '#29b8db', 15: '#e5e5e5',
+    },
+};
+
+const ANSI_RE = /\x1b\[[0-9;]*[mGKHFJ]/;
+// Strip private-mode sequences (e.g. bracketed paste \x1b[?2004h/l) that
+// ansi-to-html does not consume, leaving stray "?2004l" text behind.
+const PRIVATE_MODE_RE = /\x1b\[\?[0-9;]*[a-zA-Z]/g;
+
+const AnsiBlock = ({ content }) => {
+    const html = useMemo(() => {
+        // Fresh instance per call — ansi-to-html is stateful and a shared
+        // singleton carries color state between outputs, breaking all but the first.
+        const converter = new AnsiToHtml(ANSI_CONVERTER_OPTS);
+        return converter.toHtml(content.replace(PRIVATE_MODE_RE, ''));
+    }, [content]);
+    return (
+        <pre
+            className="ansi-output"
+            dangerouslySetInnerHTML={{ __html: html }}
+        />
+    );
+};
 
 const ToolCall = ({ toolCall }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +62,11 @@ const ToolCall = ({ toolCall }) => {
         }
     } catch {
         // Not JSON, keep as is
+    }
+    // Strip private-mode escape sequences unconditionally so both the ANSI
+    // renderer and the plain SyntaxHighlighter receive clean text.
+    if (outputContent) {
+        outputContent = outputContent.replace(PRIVATE_MODE_RE, '');
     }
 
     const getIcon = () => {
@@ -171,9 +211,13 @@ const ToolCall = ({ toolCall }) => {
                     {output && (
                         <div className="section">
                             <div className="label">Output</div>
-                            <SyntaxHighlighter language="text" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem', maxHeight: '400px', overflow: 'auto' }}>
-                                {outputContent}
-                            </SyntaxHighlighter>
+                            {ANSI_RE.test(outputContent) ? (
+                                <AnsiBlock content={outputContent} />
+                            ) : (
+                                <SyntaxHighlighter language="text" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem', maxHeight: '400px', overflow: 'auto' }}>
+                                    {outputContent}
+                                </SyntaxHighlighter>
+                            )}
                         </div>
                     )}
                 </div>

@@ -6,7 +6,7 @@ import TrajectoryViewer from './components/TrajectoryViewer';
 import Notifications from './components/Notifications';
 import ComparisonPanel from './components/ComparisonPanel';
 import TrajectorySidebar from './components/TrajectorySidebar';
-import { isJSONL, parseJSONL } from './helpers';
+import { isJSONL, parseJSONL, isATIF, normalizeATIF } from './helpers';
 import './App.css';
 
 const MAX_NOTIFICATIONS = 5;
@@ -126,11 +126,12 @@ function App() {
 
           // Detect if JSONL or single JSON
           if (isJSONL(content)) {
-            const trajectories = parseJSONL(content);
-            if (trajectories.length === 0) {
+            const rawTrajectories = parseJSONL(content);
+            if (rawTrajectories.length === 0) {
               addNotification(`"${file.name}" contains no valid trajectories.`);
               return;
             }
+            const trajectories = rawTrajectories.map(t => isATIF(t) ? normalizeATIF(t) : t);
 
             if (target === 'left') {
               setLeftTrajectories(trajectories);
@@ -146,7 +147,8 @@ function App() {
             }
           } else {
             // Single JSON object
-            const json = JSON.parse(content);
+            const raw = JSON.parse(content);
+            const json = isATIF(raw) ? normalizeATIF(raw) : raw;
             if (target === 'left') {
               setLeftTrajectories([json]);
               setLeftFileData(json);
