@@ -102,6 +102,25 @@ export function normalizeATIF(data) {
     };
 }
 
+/**
+ * Normalize a message's content field to a plain string.
+ * Handles the legacy string format and the newer array-of-parts format
+ * used by the OpenAI Responses API (parts with type "output_text", "refusal", etc.).
+ * @param {string|Array|null|undefined} content
+ * @returns {string|null|undefined}
+ */
+function normalizeMessageContent(content) {
+    if (!content) return content;
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) {
+        return content
+            .filter(part => part && typeof part.text === 'string')
+            .map(part => part.text)
+            .join('\n\n');
+    }
+    return content;
+}
+
 export function processMessages(messages) {
     const toolOutputs = new Map();
 
@@ -120,14 +139,14 @@ export function processMessages(messages) {
 
         if (msg.role === 'assistant' && msg.tool_calls) {
             // Clone message to avoid mutation
-            const newMsg = { ...msg };
+            const newMsg = { ...msg, content: normalizeMessageContent(msg.content) };
             newMsg.tool_calls = newMsg.tool_calls.map(tc => ({
                 ...tc,
                 output: toolOutputs.get(tc.id)
             }));
             processed.push(newMsg);
         } else {
-            processed.push(msg);
+            processed.push({ ...msg, content: normalizeMessageContent(msg.content) });
         }
     });
 
