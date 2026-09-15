@@ -116,7 +116,7 @@ function normalizeMessageContent(content) {
         return content
             .filter(part => part && typeof part.text === 'string')
             .map(part => part.text)
-            .join('\n\n');
+            .join('\n');
     }
     return content;
 }
