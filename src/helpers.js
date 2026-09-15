@@ -140,10 +140,15 @@ export function processMessages(messages) {
         if (msg.role === 'assistant' && msg.tool_calls) {
             // Clone message to avoid mutation
             const newMsg = { ...msg, content: normalizeMessageContent(msg.content) };
-            newMsg.tool_calls = newMsg.tool_calls.map(tc => ({
-                ...tc,
-                output: toolOutputs.get(tc.id)
-            }));
+            newMsg.tool_calls = newMsg.tool_calls.map(tc => {
+                const output = toolOutputs.get(tc.id);
+                return {
+                    ...tc,
+                    output: output
+                        ? { ...output, content: normalizeMessageContent(output.content) }
+                        : output,
+                };
+            });
             processed.push(newMsg);
         } else {
             processed.push({ ...msg, content: normalizeMessageContent(msg.content) });
