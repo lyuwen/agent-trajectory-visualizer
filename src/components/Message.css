@@ -98,4 +98,7 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
     font-style: italic;
+    /* Preserve the author's line breaks; reasoning is rendered as plain text. */
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
 }
