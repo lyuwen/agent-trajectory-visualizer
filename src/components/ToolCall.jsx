@@ -5,6 +5,8 @@ import AnsiToHtml from 'ansi-to-html';
 import { Terminal, ChevronRight, ChevronDown, CheckCircle, XCircle, FileText, Brain, Flag } from 'lucide-react';
 import clsx from 'clsx';
 import MarkdownContent from './MarkdownContent';
+import StrReplaceEditorView from './StrReplaceEditorView';
+import { buildEditorPresentation, isExplicitEditorError } from '../strReplaceEditorPresentation';
 import './ToolCall.css';
 
 const ANSI_CONVERTER_OPTS = {
@@ -41,33 +43,83 @@ const AnsiBlock = ({ content }) => {
     );
 };
 
+// Shared ANSI-aware output renderer for the generic Output block and the
+// specialized Raw Output disclosure.
+const OutputContent = ({ content }) => (
+    ANSI_RE.test(content) ? (
+        <AnsiBlock content={content} />
+    ) : (
+        <SyntaxHighlighter language="text" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem', padding: '0.5rem 0.6rem', fontSize: '0.76rem', maxHeight: '360px', overflow: 'auto' }}>
+            {content}
+        </SyntaxHighlighter>
+    )
+);
+
 const ToolCall = ({ toolCall }) => {
     const [isOpen, setIsOpen] = useState(false);
     const { function: fn, output } = toolCall;
 
-    let parsedArgs = {};
-    try {
-        parsedArgs = JSON.parse(fn.arguments);
-    } catch {
-        parsedArgs = { raw: fn.arguments };
-    }
+    const parsedArgs = useMemo(() => {
+        try {
+            return JSON.parse(fn.arguments);
+        } catch {
+            return { raw: fn.arguments };
+        }
+    }, [fn.arguments]);
     const argsJson = JSON.stringify(parsedArgs, null, 2);
 
-    // Parse output content if it is JSON, otherwise keep as string
-    let outputContent = output?.content;
-    try {
-        if (outputContent) {
-            const parsed = JSON.parse(outputContent);
-            outputContent = JSON.stringify(parsed, null, 2);
+    // Normalize the tool result to text: objects are serialized stably and
+    // private-mode escape sequences are stripped so both the ANSI renderer and
+    // the plain SyntaxHighlighter receive clean text, and so the Raw Output
+    // disclosure matches what the generic Output block would have shown.
+    const rawOutputContent = useMemo(() => {
+        const content = output?.content;
+        if (content === undefined || content === null) return content;
+        let text;
+        if (typeof content === 'string') {
+            text = content;
+        } else if (typeof content === 'object') {
+            try {
+                text = JSON.stringify(content);
+            } catch {
+                try {
+                    text = String(content);
+                } catch {
+                    return null;
+                }
+            }
+        } else {
+            text = String(content);
         }
-    } catch {
-        // Not JSON, keep as is
-    }
-    // Strip private-mode escape sequences unconditionally so both the ANSI
-    // renderer and the plain SyntaxHighlighter receive clean text.
-    if (outputContent) {
-        outputContent = outputContent.replace(PRIVATE_MODE_RE, '');
-    }
+        return text.replace(PRIVATE_MODE_RE, '');
+    }, [output]);
+
+    // Generic tools keep today's pretty-printed form; the presentation builder
+    // and the Raw Output disclosure use the untouched rawOutputContent.
+    const outputContent = useMemo(() => {
+        if (!rawOutputContent) return rawOutputContent;
+        try {
+            const parsed = JSON.parse(rawOutputContent);
+            return JSON.stringify(parsed, null, 2);
+        } catch {
+            // Not JSON, keep as is
+        }
+        return rawOutputContent;
+    }, [rawOutputContent]);
+
+    // A str_replace_editor call with usable output is presented by the dedicated
+    // renderer. An absent or empty result stays pending: the arguments alone are
+    // not evidence that the edit happened, so no speculative diff is shown.
+    const hasOutputText =
+        typeof rawOutputContent === 'string' && rawOutputContent.trim().length > 0;
+    const editorPresentation = useMemo(() => {
+        if (fn.name !== 'str_replace_editor' || !hasOutputText) return null;
+        return buildEditorPresentation(parsedArgs, rawOutputContent);
+    }, [fn.name, parsedArgs, hasOutputText, rawOutputContent]);
+
+    const specialized = editorPresentation !== null && editorPresentation.kind !== 'fallback';
+    const failed = fn.name === 'str_replace_editor' && isExplicitEditorError(rawOutputContent);
+    const showSuccess = fn.name === 'str_replace_editor' ? hasOutputText : Boolean(output);
 
     const getIcon = () => {
         switch (fn.name) {
@@ -133,7 +185,7 @@ const ToolCall = ({ toolCall }) => {
     };
 
     return (
-        <div className={clsx("tool-call-container", fn.name)}>
+        <div className={clsx("tool-call-container", fn.name, failed && "has-error")}>
             <div className="tool-header" onClick={() => setIsOpen(!isOpen)}>
                 <div className="tool-title">
                     {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
@@ -144,13 +196,24 @@ const ToolCall = ({ toolCall }) => {
                     )}
                 </div>
                 <div className="tool-status">
-                    {output ? <CheckCircle size={16} className="success" /> : <XCircle size={16} className="pending" />}
+                    {failed ? (
+                        <XCircle size={16} className="error" />
+                    ) : showSuccess ? (
+                        <CheckCircle size={16} className="success" />
+                    ) : (
+                        <XCircle size={16} className="pending" />
+                    )}
+                    <span className="tool-status-label">
+                        {failed ? 'Failed' : showSuccess ? 'Completed' : 'Pending'}
+                    </span>
                 </div>
             </div>
 
             {isOpen && (
                 <div className="tool-body">
                     {renderSpecialToolBody()}
+
+                    {specialized && <StrReplaceEditorView presentation={editorPresentation} />}
 
                     {/* Show raw arguments for specialized tools */}
                     {['file_editor', 'str_replace_editor', 'terminal', 'finish', 'think'].includes(fn.name) && (
@@ -164,16 +227,19 @@ const ToolCall = ({ toolCall }) => {
                         </div>
                     )}
 
-                    {output && (
+                    {output && !specialized && (
                         <div className="section">
                             <div className="label">Output</div>
-                            {ANSI_RE.test(outputContent) ? (
-                                <AnsiBlock content={outputContent} />
-                            ) : (
-                                <SyntaxHighlighter language="text" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem', padding: '0.5rem 0.6rem', fontSize: '0.76rem', maxHeight: '360px', overflow: 'auto' }}>
-                                    {outputContent}
-                                </SyntaxHighlighter>
-                            )}
+                            <OutputContent content={outputContent} />
+                        </div>
+                    )}
+
+                    {specialized && (
+                        <div className="section collapsible-args">
+                            <details>
+                                <summary className="label cursor-pointer">Raw Output</summary>
+                                <OutputContent content={rawOutputContent} />
+                            </details>
                         </div>
                     )}
                 </div>
