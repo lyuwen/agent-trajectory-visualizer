@@ -1,0 +1,225 @@
+/* Review surface for str_replace_editor / file_editor tool presentations.
+   The outer .str-editor is the single scroll container; gutters stay sticky
+   horizontally so a long source line scrolls instead of wrapping. */
+
+.str-editor {
+  --str-editor-old-gutter-width: 3.25rem;
+  --str-editor-new-gutter-width: 3.25rem;
+  --str-editor-marker-width: 1.5rem;
+  --str-editor-font-size: 0.8125rem;
+  --str-editor-line-height: 1.6;
+
+  --str-editor-row-bg: var(--bg-secondary, #18181b);
+  --str-editor-add-bg: #10261a;
+  --str-editor-add-accent: rgba(34, 197, 94, 0.75);
+  --str-editor-remove-bg: #2a1416;
+  --str-editor-remove-accent: rgba(239, 68, 68, 0.75);
+
+  max-width: 100%;
+  max-height: 420px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  container-type: inline-size;
+
+  background-color: var(--bg-primary, #09090b);
+  color: var(--text-primary, #f4f4f5);
+  border: 1px solid var(--border-color, #3f3f46);
+  border-radius: 8px;
+
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: var(--str-editor-font-size);
+  line-height: var(--str-editor-line-height);
+}
+
+.str-editor:focus-visible {
+  outline: 2px solid var(--accent-color, #6366f1);
+  outline-offset: 2px;
+}
+
+.str-editor-table {
+  width: max-content;
+  min-width: 100%;
+}
+
+.str-editor-row {
+  display: grid;
+  grid-template-columns:
+    var(--str-editor-old-gutter-width)
+    var(--str-editor-new-gutter-width)
+    var(--str-editor-marker-width)
+    max-content;
+  align-items: stretch;
+  font-size: var(--str-editor-font-size);
+
+  background-color: var(--str-editor-row-bg);
+}
+
+.str-editor-row.is-add {
+  background-color: var(--str-editor-add-bg);
+}
+
+.str-editor-row.is-remove {
+  background-color: var(--str-editor-remove-bg);
+}
+
+.str-editor-row.is-add .str-editor-gutter-old {
+  box-shadow: inset 3px 0 0 0 var(--str-editor-add-accent);
+}
+
+.str-editor-row.is-remove .str-editor-gutter-old {
+  box-shadow: inset 3px 0 0 0 var(--str-editor-remove-accent);
+}
+
+.str-editor-gutter,
+.str-editor-marker {
+  position: sticky;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+
+  /* Inherit the opaque per-row background so code never bleeds through. */
+  background-color: inherit;
+  user-select: none;
+}
+
+.str-editor-gutter {
+  justify-content: flex-end;
+  color: var(--text-secondary, #a1a1aa);
+  font-variant-numeric: tabular-nums;
+  border-right: 1px solid rgba(63, 63, 70, 0.55);
+}
+
+.str-editor-gutter-old {
+  left: 0;
+}
+
+.str-editor-gutter-new {
+  left: var(--str-editor-old-gutter-width);
+}
+
+.str-editor-marker {
+  left: calc(var(--str-editor-old-gutter-width) + var(--str-editor-new-gutter-width));
+  justify-content: center;
+  font-weight: 600;
+  color: var(--text-secondary, #a1a1aa);
+}
+
+.str-editor-row.is-add .str-editor-marker {
+  color: #4ade80;
+}
+
+.str-editor-row.is-remove .str-editor-marker {
+  color: #f87171;
+}
+
+.str-editor-code {
+  display: block;
+  padding: 0 0.85rem;
+  white-space: pre;
+  color: var(--text-primary, #f4f4f5);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  tab-size: 4;
+}
+
+/* Directory listing */
+
+.str-editor-listing {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 0.4rem 0;
+  list-style: none;
+}
+
+.str-editor-listing-item {
+  padding: 0.1rem 0.85rem;
+}
+
+.str-editor-listing-item code {
+  display: inline;
+  padding: 0;
+}
+
+/* Preformatted raw output and failure messages */
+
+.str-editor-pre {
+  width: max-content;
+  min-width: 100%;
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  white-space: pre;
+  color: var(--text-primary, #f4f4f5);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.str-editor-error {
+  border-color: var(--error-color, #ef4444);
+}
+
+.str-editor-error-title {
+  margin: 0;
+  padding: 0.6rem 0.85rem 0;
+  color: var(--error-color, #ef4444);
+  font-weight: 600;
+}
+
+/* Narrow layouts shrink the gutters but never hide line numbers or markers.
+   The viewport query covers a narrow window; the container query below covers
+   the more common case of a wide window with a narrow comparison pane, where
+   the card's own width is what matters. */
+
+@media (max-width: 1100px) {
+  .str-editor {
+    --str-editor-old-gutter-width: 2.4rem;
+    --str-editor-new-gutter-width: 2.4rem;
+    --str-editor-marker-width: 1.15rem;
+    --str-editor-font-size: 0.75rem;
+  }
+
+  .str-editor-gutter,
+  .str-editor-marker {
+    padding: 0 0.3rem;
+  }
+
+  .str-editor-code {
+    padding: 0 0.55rem;
+  }
+
+  .str-editor-listing-item {
+    padding: 0.1rem 0.55rem;
+  }
+}
+
+@container (max-width: 520px) {
+  .str-editor-table {
+    --str-editor-old-gutter-width: 2.1rem;
+    --str-editor-new-gutter-width: 2.1rem;
+    --str-editor-marker-width: 1rem;
+    --str-editor-font-size: 0.72rem;
+  }
+
+  .str-editor-gutter,
+  .str-editor-marker {
+    padding: 0 0.25rem;
+  }
+
+  .str-editor-code {
+    padding: 0 0.45rem;
+  }
+
+  /* These views sit outside .str-editor-table, so they cannot inherit the
+     table's overridden font-size custom property. */
+  .str-editor-listing,
+  .str-editor-pre {
+    font-size: 0.72rem;
+  }
+
+  .str-editor-listing-item {
+    padding: 0.1rem 0.45rem;
+  }
+}
