@@ -1,0 +1,152 @@
+.filter-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--filter-bar-height, 46px);
+    z-index: 870;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    background: rgba(9, 9, 11, 0.86);
+    backdrop-filter: blur(var(--glass-blur));
+    border-bottom: 1px solid var(--glass-border);
+}
+
+.filter-bar__inner {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    padding: 0.2rem 0;
+}
+
+.filter-bar__inner::-webkit-scrollbar {
+    height: 4px;
+}
+
+.filter-bar__title {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-secondary);
+    margin-right: 0.15rem;
+    flex-shrink: 0;
+}
+
+.filter-bar__divider {
+    width: 1px;
+    height: 18px;
+    background: var(--border-color);
+    margin: 0 0.2rem;
+    flex-shrink: 0;
+}
+
+.filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-shrink: 0;
+    padding: 0.22rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.filter-chip:hover {
+    border-color: var(--accent-color);
+    background: rgba(99, 102, 241, 0.14);
+}
+
+.filter-chip__icon {
+    opacity: 0.75;
+    flex-shrink: 0;
+}
+
+.filter-chip__label {
+    white-space: nowrap;
+}
+
+.filter-chip__count {
+    color: var(--text-secondary);
+    font-size: 0.68rem;
+    padding: 0 0.22rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.07);
+    white-space: nowrap;
+}
+
+/* Type switched off: dimmed and struck through, but still clickable. */
+.filter-chip--off {
+    opacity: 0.42;
+    background: transparent;
+}
+
+.filter-chip--off .filter-chip__label {
+    text-decoration: line-through;
+}
+
+.filter-chip--off .filter-chip__count {
+    background: transparent;
+}
+
+.filter-chip--user {
+    border-color: rgba(56, 189, 248, 0.35);
+}
+
+.filter-chip--system {
+    border-color: rgba(251, 191, 36, 0.35);
+}
+
+.filter-chip--tool {
+    border-color: rgba(99, 102, 241, 0.35);
+}
+
+.filter-chip--user .filter-chip__icon {
+    color: #38bdf8;
+}
+
+.filter-chip--system .filter-chip__icon {
+    color: #fbbf24;
+}
+
+.filter-chip--tool .filter-chip__icon {
+    color: #a78bfa;
+}
+
+.filter-chip--reset {
+    border-style: dashed;
+}
+
+.filter-chip--idle {
+    opacity: 0.5;
+}
+
+.filter-chip:disabled {
+    cursor: default;
+}
+
+.filter-chip:focus-visible {
+    outline: 2px solid rgba(99, 102, 241, 0.6);
+    outline-offset: 1px;
+}
+
+@media (max-width: 768px) {
+    .filter-bar {
+        justify-content: flex-start;
+    }
+
+    .filter-bar__title {
+        display: none;
+    }
+}

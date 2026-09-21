@@ -13,6 +13,8 @@ const TrajectoryViewer = ({
   variant = 'full',
   containerRef,
   onFocus,
+  hiddenFilters,
+  expandSignal,
 }) => {
   const processedMessages = useMemo(() => {
     if (!data?.messages) return [];
@@ -50,6 +52,29 @@ const TrajectoryViewer = ({
 
   const patch = data.test_result?.git_patch;
 
+  // Apply the floating filter strip: a type is shown unless its chip is off.
+  // A tool chip classifies the whole message, not just its cards: when every
+  // call in a turn is filtered out the turn goes away instead of lingering as
+  // a tool-less shell. A turn whose calls are only partly hidden stays, showing
+  // just the surviving cards.
+  const visibleMessages = useMemo(() => {
+    if (!hiddenFilters || hiddenFilters.size === 0) return messagesWithTurns;
+
+    return messagesWithTurns
+      .map((msg) => {
+        if (hiddenFilters.has(`role:${msg.role}`)) return null;
+
+        const calls = Array.isArray(msg.tool_calls) ? msg.tool_calls : [];
+        if (calls.length === 0) return { ...msg, tool_calls: calls };
+
+        const toolCalls = calls.filter((tc) => !hiddenFilters.has(`tool:${tc?.function?.name}`));
+        if (toolCalls.length === 0) return null;
+
+        return { ...msg, tool_calls: toolCalls };
+      })
+      .filter(Boolean);
+  }, [messagesWithTurns, hiddenFilters]);
+
   return (
     <div className={clsx('trajectory-wrapper', `trajectory-wrapper--${variant}`)}>
       <div
@@ -75,10 +100,20 @@ const TrajectoryViewer = ({
           </div>
 
           <div className="messages-list">
-            {messagesWithTurns.map((msg, index) => (
-              <Message key={index} message={msg} />
+            {visibleMessages.map((msg, index) => (
+              <Message
+                key={`${index}:${expandSignal?.token ?? 0}`}
+                message={msg}
+                expandSignal={expandSignal}
+              />
             ))}
           </div>
+
+          {visibleMessages.length === 0 && (
+            <div className="filter-empty">
+              Every message is filtered out — turn a type back on in the filter strip above.
+            </div>
+          )}
 
           <PatchViewer patch={patch} />
         </div>

@@ -125,7 +125,7 @@ const ToolCall = ({ toolCall }) => {
         return (
             <div className="section">
                 <div className="label">Arguments</div>
-                <SyntaxHighlighter language="json" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem' }}>
+                <SyntaxHighlighter language="json" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem', padding: '0.5rem 0.6rem', fontSize: '0.76rem' }}>
                     {argsJson}
                 </SyntaxHighlighter>
             </div>
@@ -157,7 +157,7 @@ const ToolCall = ({ toolCall }) => {
                         <div className="section collapsible-args">
                             <details>
                                 <summary className="label cursor-pointer">Raw Arguments</summary>
-                                <SyntaxHighlighter language="json" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem' }}>
+                                <SyntaxHighlighter language="json" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem', padding: '0.5rem 0.6rem', fontSize: '0.76rem' }}>
                                     {argsJson}
                                 </SyntaxHighlighter>
                             </details>
@@ -170,7 +170,7 @@ const ToolCall = ({ toolCall }) => {
                             {ANSI_RE.test(outputContent) ? (
                                 <AnsiBlock content={outputContent} />
                             ) : (
-                                <SyntaxHighlighter language="text" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem', maxHeight: '400px', overflow: 'auto' }}>
+                                <SyntaxHighlighter language="text" style={vscDarkPlus} customStyle={{ margin: 0, borderRadius: '0.5rem', padding: '0.5rem 0.6rem', fontSize: '0.76rem', maxHeight: '360px', overflow: 'auto' }}>
                                     {outputContent}
                                 </SyntaxHighlighter>
                             )}

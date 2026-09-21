@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FolderOpen, Plus } from 'lucide-react';
 import FileUploader from './components/FileUploader';
@@ -6,7 +6,8 @@ import TrajectoryViewer from './components/TrajectoryViewer';
 import Notifications from './components/Notifications';
 import ComparisonPanel from './components/ComparisonPanel';
 import TrajectorySidebar from './components/TrajectorySidebar';
-import { isJSONL, parseJSONL, isATIF, normalizeATIF } from './helpers';
+import FilterBar from './components/FilterBar';
+import { isJSONL, parseJSONL, isATIF, normalizeATIF, computeFacets, mergeFacets } from './helpers';
 import './App.css';
 
 const MAX_NOTIFICATIONS = 5;
@@ -49,6 +50,8 @@ function App() {
   const [viewportWidth, setViewportWidth] = useState(window.innerWidth);
   const [isResizing, setIsResizing] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  // Types switched OFF in the floating filter strip. Empty = every type shown.
+  const [hiddenFilters, setHiddenFilters] = useState(() => new Set());
   const fileInputRef = useRef(null);
   const rightFileInputRef = useRef(null);
   const idRef = useRef(0);
@@ -110,6 +113,37 @@ function App() {
     if (timers) clearTimeout(timers.fade);
     startFade(id);
   }, [startFade]);
+
+  const filterCounts = useMemo(
+    () => mergeFacets(computeFacets(leftFileData), computeFacets(rightFileData)),
+    [leftFileData, rightFileData]
+  );
+
+  const toggleFilter = useCallback((key) => {
+    setHiddenFilters((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) {
+        next.delete(key);
+      } else {
+        next.add(key);
+      }
+      return next;
+    });
+  }, []);
+
+  const resetFilters = useCallback(() => setHiddenFilters(new Set()), []);
+
+  // token forces a new object identity per click so messages re-sync even when
+  // the action repeats (expand-all twice in a row).
+  const [expandSignal, setExpandSignal] = useState({ token: 0, expanded: true });
+
+  const collapseAllMessages = useCallback(() => {
+    setExpandSignal((prev) => ({ token: prev.token + 1, expanded: false }));
+  }, []);
+
+  const expandAllMessages = useCallback(() => {
+    setExpandSignal((prev) => ({ token: prev.token + 1, expanded: true }));
+  }, []);
 
   const parseFileToTarget = useCallback(
     (file, target) => {
@@ -481,7 +515,7 @@ function App() {
     <>
       <div
         {...getRootProps()}
-        className={`app ${comparisonOpen ? 'app--comparison-open' : ''} ${isResizing ? 'app--is-resizing' : ''}`}
+        className={`app ${comparisonOpen ? 'app--comparison-open' : ''} ${isResizing ? 'app--is-resizing' : ''} ${leftFileData ? 'app--has-filter' : ''}`}
         style={comparisonOpen ? { '--comparison-panel-width': `${clampPanelWidth(panelWidth, viewportWidth)}px` } : undefined}
       >
         <input {...getInputProps()} />
@@ -490,6 +524,15 @@ function App() {
           <FileUploader isDragActive={isDragActive} />
         ) : (
           <>
+            <FilterBar
+              counts={filterCounts}
+              hiddenFilters={hiddenFilters}
+              onToggle={toggleFilter}
+              onReset={resetFilters}
+              comparisonOpen={!!rightFileData}
+              onCollapseAll={collapseAllMessages}
+              onExpandAll={expandAllMessages}
+            />
             {leftTrajectories.length > 1 && (
               <TrajectorySidebar
                 trajectories={leftTrajectories}
@@ -510,6 +553,8 @@ function App() {
                   title={comparisonOpen ? 'Primary trajectory' : 'Agent Trajectory'}
                   containerRef={leftScrollRef}
                   variant={comparisonOpen ? 'panel' : 'full'}
+                  hiddenFilters={hiddenFilters}
+                  expandSignal={expandSignal}
                   onFocus={() => setFocusedPanel('left')}
                 />
                 {isDragActive && (
@@ -565,6 +610,8 @@ function App() {
               }}
               sidebarOpen={rightSidebarOpen}
               onToggleSidebar={() => setRightSidebarOpen(!rightSidebarOpen)}
+              hiddenFilters={hiddenFilters}
+              expandSignal={expandSignal}
             />
           </>
         )}

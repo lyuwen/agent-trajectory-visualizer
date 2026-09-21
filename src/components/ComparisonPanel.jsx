@@ -32,6 +32,8 @@ const ComparisonPanel = ({
   onSelectTrajectory,
   sidebarOpen = false,
   onToggleSidebar,
+  hiddenFilters,
+  expandSignal,
 }) => {
   const rootProps = getRootProps({ className: 'comparison-panel' });
   const stopPanelClick = (event) => event.stopPropagation();
@@ -113,6 +115,8 @@ const ComparisonPanel = ({
                   containerRef={scrollRef}
                   variant="panel"
                   onFocus={onFocus}
+                  hiddenFilters={hiddenFilters}
+                  expandSignal={expandSignal}
                 />
                 {isDragActive && (
                   <div className="comparison-panel__drag-overlay">

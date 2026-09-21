@@ -2,7 +2,7 @@
     border: 1px solid var(--border-color);
     border-radius: 0.5rem;
     background: rgba(0, 0, 0, 0.2);
-    margin: 0.5rem 0;
+    margin: 0.4rem 0;
     overflow: hidden;
 }
 
@@ -10,7 +10,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0.75rem;
+    padding: 0.35rem 0.6rem;
     cursor: pointer;
     background: rgba(255, 255, 255, 0.03);
     transition: background 0.2s;
@@ -23,9 +23,9 @@
 .tool-title {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     color: var(--accent-color);
 }
 
@@ -46,13 +46,13 @@
 }
 
 .tool-body {
-    padding: 0.75rem;
+    padding: 0.55rem 0.6rem;
     border-top: 1px solid var(--border-color);
     background: rgba(0, 0, 0, 0.3);
 }
 
 .section {
-    margin-bottom: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 .section:last-child {
@@ -60,7 +60,7 @@
 }
 
 .label {
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--text-secondary);
@@ -69,7 +69,7 @@
 
 .tool-summary {
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.78rem;
     font-style: italic;
     white-space: nowrap;
     overflow: hidden;
@@ -82,25 +82,25 @@
 .special-tool-content {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding-bottom: 0.5rem;
+    gap: 0.35rem;
+    padding-bottom: 0.35rem;
 }
 
 .info-row {
     display: flex;
     align-items: baseline;
-    gap: 0.75rem;
+    gap: 0.5rem;
 }
 
 .info-label {
-    min-width: 80px;
-    font-size: 0.8rem;
+    min-width: 70px;
+    font-size: 0.72rem;
     color: var(--text-secondary);
     font-weight: 500;
 }
 
 .info-value {
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     font-family: 'JetBrains Mono', monospace;
     word-break: break-all;
     color: var(--text-primary);
@@ -122,7 +122,7 @@
 .collapsible-args details>summary {
     list-style: none;
     cursor: pointer;
-    font-size: 0.75rem;
+    font-size: 0.68rem;
     color: var(--text-secondary);
     margin-bottom: 0.25rem;
 }
@@ -138,12 +138,12 @@
 /* Tool specific coloring */
 .ansi-output {
     margin: 0;
-    padding: 0.75rem 1rem;
+    padding: 0.55rem 0.7rem;
     background: #1e1e1e;
     border-radius: 0.5rem;
     font-family: 'Menlo', 'Consolas', 'Monaco', monospace;
-    font-size: 0.78rem;
-    line-height: 1.5;
+    font-size: 0.74rem;
+    line-height: 1.45;
     color: #d4d4d4;
     max-height: 400px;
     overflow: auto;

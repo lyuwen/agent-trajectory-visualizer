@@ -59,4 +59,22 @@ describe('Message reasoning rendering', () => {
 
     expect(container.querySelector('.markdown-body .katex')).toBeTruthy();
   });
+
+  it('keeps single newlines in a user message as line breaks', () => {
+    const { container } = render(
+      <Message message={{ role: 'user', content: 'First line\nSecond line\nThird line' }} />
+    );
+
+    const body = container.querySelector('.markdown-body');
+    // One paragraph, but the soft breaks are preserved rather than collapsed.
+    expect(body.querySelectorAll('p')).toHaveLength(1);
+    expect(body.querySelectorAll('br')).toHaveLength(2);
+    expect(body).toHaveTextContent('First line Second line Third line');
+  });
+
+  it('keeps single newlines in reasoning as line breaks', () => {
+    const { container } = renderReasoning('Step one\nStep two');
+
+    expect(container.querySelectorAll('.reasoning-text br')).toHaveLength(1);
+  });
 });

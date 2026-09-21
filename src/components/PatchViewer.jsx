@@ -21,7 +21,7 @@ const PatchViewer = ({ patch }) => {
 
             {isOpen && (
                 <div className="patch-content">
-                    <SyntaxHighlighter language="diff" style={vscDarkPlus} showLineNumbers customStyle={{ margin: 0, fontSize: '0.9rem' }}>
+                    <SyntaxHighlighter language="diff" style={vscDarkPlus} showLineNumbers customStyle={{ margin: 0, padding: '0.55rem 0.7rem', fontSize: '0.8rem' }}>
                         {patch}
                     </SyntaxHighlighter>
                 </div>

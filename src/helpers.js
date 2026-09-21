@@ -103,9 +103,69 @@ export function normalizeATIF(data) {
 }
 
 /**
- * Normalize a message's content field to a plain string.
- * Handles the legacy string format and the newer array-of-parts format
- * used by the OpenAI Responses API (parts with type "output_text", "refusal", etc.).
+ * Count message roles and tool call types in a trajectory, for the filter strip.
+ * Counts raw messages: tool-role messages are excluded because processMessages()
+ * merges them into the assistant tool_calls that are counted here.
+ * @param {object|null|undefined} data - Normalized trajectory
+ * @returns {{roles: Object<string, number>, tools: Object<string, number>}}
+ */
+export function computeFacets(data) {
+  const roles = { user: 0, system: 0, assistant: 0 };
+  const tools = {};
+
+  const messages = Array.isArray(data?.messages) ? data.messages : [];
+
+  for (const msg of messages) {
+    if (!msg || msg.role === 'tool') continue;
+
+    if (Object.prototype.hasOwnProperty.call(roles, msg.role)) {
+      roles[msg.role] += 1;
+    }
+
+    if (Array.isArray(msg.tool_calls)) {
+      for (const call of msg.tool_calls) {
+        const name = call?.function?.name;
+        if (!name) continue;
+        tools[name] = (tools[name] ?? 0) + 1;
+      }
+    }
+  }
+
+  return { roles, tools };
+}
+
+/**
+ * Merge two facet counts into per-pane values for the filter strip.
+ * @param {{roles: object, tools: object}} left
+ * @param {{roles: object, tools: object}} right
+ * @returns {{roles: Object<string, {left: number, right: number}>, tools: Object<string, {left: number, right: number}>}}
+ */
+export function mergeFacets(left, right) {
+  const pair = (a, b) => ({ left: a ?? 0, right: b ?? 0 });
+
+  const roles = {};
+  const roleKeys = new Set([
+    ...Object.keys(left?.roles ?? {}),
+    ...Object.keys(right?.roles ?? {}),
+  ]);
+  for (const key of roleKeys) {
+    roles[key] = pair(left?.roles?.[key], right?.roles?.[key]);
+  }
+
+  const tools = {};
+  const toolKeys = new Set([
+    ...Object.keys(left?.tools ?? {}),
+    ...Object.keys(right?.tools ?? {}),
+  ]);
+  for (const key of toolKeys) {
+    tools[key] = pair(left?.tools?.[key], right?.tools?.[key]);
+  }
+
+  return { roles, tools };
+}
+
+/**
+ * Filter markdown content to a plain string.
  * @param {string|Array|null|undefined} content
  * @returns {string|null|undefined}
  */
