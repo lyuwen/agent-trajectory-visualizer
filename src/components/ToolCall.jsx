@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AnsiToHtml from 'ansi-to-html';
 import { Terminal, ChevronRight, ChevronDown, CheckCircle, XCircle, FileText, Brain, Flag } from 'lucide-react';
 import clsx from 'clsx';
+import MarkdownContent from './MarkdownContent';
 import './ToolCall.css';
 
 const ANSI_CONVERTER_OPTS = {
@@ -84,29 +84,7 @@ const ToolCall = ({ toolCall }) => {
             return (
                 <div className="special-tool-content">
                     <div className="markdown-body">
-                        <ReactMarkdown
-                            components={{
-                                code({ inline, className, children, ...props }) {
-                                    const match = /language-(\w+)/.exec(className || '')
-                                    return !inline && match ? (
-                                        <SyntaxHighlighter
-                                            style={vscDarkPlus}
-                                            language={match[1]}
-                                            PreTag="div"
-                                            {...props}
-                                        >
-                                            {String(children).replace(/\n$/, '')}
-                                        </SyntaxHighlighter>
-                                    ) : (
-                                        <code className={className} {...props}>
-                                            {children}
-                                        </code>
-                                    )
-                                }
-                            }}
-                        >
-                            {parsedArgs.message}
-                        </ReactMarkdown>
+                        <MarkdownContent>{parsedArgs.message}</MarkdownContent>
                     </div>
                 </div>
             );
@@ -115,29 +93,7 @@ const ToolCall = ({ toolCall }) => {
             return (
                 <div className="special-tool-content">
                     <div className="markdown-body">
-                        <ReactMarkdown
-                            components={{
-                                code({ inline, className, children, ...props }) {
-                                    const match = /language-(\w+)/.exec(className || '')
-                                    return !inline && match ? (
-                                        <SyntaxHighlighter
-                                            style={vscDarkPlus}
-                                            language={match[1]}
-                                            PreTag="div"
-                                            {...props}
-                                        >
-                                            {String(children).replace(/\n$/, '')}
-                                        </SyntaxHighlighter>
-                                    ) : (
-                                        <code className={className} {...props}>
-                                            {children}
-                                        </code>
-                                    )
-                                }
-                            }}
-                        >
-                            {parsedArgs.thought}
-                        </ReactMarkdown>
+                        <MarkdownContent>{parsedArgs.thought}</MarkdownContent>
                     </div>
                 </div>
             );

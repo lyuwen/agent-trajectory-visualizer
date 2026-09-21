@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { User, Bot, Settings, ChevronDown, ChevronRight } from 'lucide-react';
 import clsx from 'clsx';
+import MarkdownContent from './MarkdownContent';
 import ToolCall from './ToolCall';
 import './Message.css';
 
@@ -32,36 +30,16 @@ const Message = ({ message }) => {
                 <div className="message-content">
                     {message.content && (
                         <div className="markdown-body">
-                            <ReactMarkdown
-                                components={{
-                                    code({ inline, className, children, ...props }) {
-                                        const match = /language-(\w+)/.exec(className || '')
-                                        return !inline && match ? (
-                                            <SyntaxHighlighter
-                                                style={vscDarkPlus}
-                                                language={match[1]}
-                                                PreTag="div"
-                                                {...props}
-                                            >
-                                                {String(children).replace(/\n$/, '')}
-                                            </SyntaxHighlighter>
-                                        ) : (
-                                            <code className={className} {...props}>
-                                                {children}
-                                            </code>
-                                        )
-                                    }
-                                }}
-                            >
-                                {message.content}
-                            </ReactMarkdown>
+                            <MarkdownContent>{message.content}</MarkdownContent>
                         </div>
                     )}
 
                     {message.reasoning_content && (
                         <div className="reasoning-block">
                             <div className="reasoning-label">Reasoning</div>
-                            <div className="reasoning-text">{message.reasoning_content}</div>
+                            <div className="reasoning-text markdown-body">
+                                <MarkdownContent>{message.reasoning_content}</MarkdownContent>
+                            </div>
                         </div>
                     )}
 

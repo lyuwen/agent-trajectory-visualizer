@@ -97,8 +97,16 @@
 .reasoning-text {
     font-size: 0.9rem;
     color: var(--text-secondary);
+}
+
+/* Reasoning reads as an annotation: keep prose italic, but never italicize code. */
+.reasoning-text p,
+.reasoning-text li,
+.reasoning-text blockquote {
     font-style: italic;
-    /* Preserve the author's line breaks; reasoning is rendered as plain text. */
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
+}
+
+.reasoning-text pre,
+.reasoning-text code {
+    font-style: normal;
 }
