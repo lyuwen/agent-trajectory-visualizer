@@ -357,3 +357,52 @@ export function buildEditorPresentation(args, output) {
     return { kind: 'fallback', action: null, path: null, content: '' };
   }
 }
+
+// Line-change counts for the collapsed header. The same action guards and the
+// same diff as the expanded presentation are used, so the two can never
+// disagree about what an edit does. Output is not required: the header
+// describes the requested change even while the call is still pending.
+function summarizeEditorChangeUnsafe(args) {
+  const normalized = normalizeArgs(args);
+  const action = typeof normalized.command === 'string' ? normalized.command : null;
+
+  if (action === 'create') {
+    if (!hasText(normalized.file_text)) return null;
+    return { additions: splitLines(normalized.file_text).length, removals: 0 };
+  }
+
+  if (action === 'str_replace') {
+    if (!hasText(normalized.old_str) || !hasText(normalized.new_str)) return null;
+    const rows = diffLines(splitLines(normalized.old_str), splitLines(normalized.new_str));
+    let additions = 0;
+    let removals = 0;
+    for (const row of rows) {
+      if (row.type === 'add') additions += 1;
+      else if (row.type === 'remove') removals += 1;
+    }
+    return { additions, removals };
+  }
+
+  if (action === 'insert') {
+    const insertLine = normalized.insert_line;
+    if (
+      !hasText(normalized.new_str) ||
+      typeof insertLine !== 'number' ||
+      !Number.isInteger(insertLine) ||
+      insertLine < 0
+    ) {
+      return null;
+    }
+    return { additions: splitLines(normalized.new_str).length, removals: 0 };
+  }
+
+  return null;
+}
+
+export function summarizeEditorChange(args) {
+  try {
+    return summarizeEditorChangeUnsafe(args);
+  } catch {
+    return null;
+  }
+}

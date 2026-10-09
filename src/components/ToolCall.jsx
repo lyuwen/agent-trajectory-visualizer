@@ -2,11 +2,21 @@ import React, { useMemo, useState } from 'react';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import AnsiToHtml from 'ansi-to-html';
-import { Terminal, ChevronRight, ChevronDown, CheckCircle, XCircle, FileText, Brain, Flag } from 'lucide-react';
+import { ChevronRight, ChevronDown, CheckCircle, XCircle } from 'lucide-react';
 import clsx from 'clsx';
 import MarkdownContent from './MarkdownContent';
 import StrReplaceEditorView from './StrReplaceEditorView';
+import { NATURE_ICONS } from './natureIcons';
 import { buildEditorPresentation, isExplicitEditorError } from '../strReplaceEditorPresentation';
+import {
+    buildToolHeaderDetail,
+    formatViewRange,
+    shortenPath,
+    toolNature,
+    truncateHeaderCommand,
+    MAX_HEADER_COMMANDS,
+    MAX_HEADER_PROGRAM_CHARS,
+} from '../toolCallHeader';
 import './ToolCall.css';
 
 const ANSI_CONVERTER_OPTS = {
@@ -54,6 +64,75 @@ const OutputContent = ({ content }) => (
         </SyntaxHighlighter>
     )
 );
+
+// The collapsed header's evidence chips: what file and how many lines changed,
+// which part of a file was read, or which programs a shell call runs. Colors
+// carry the read/edit/shell distinction; the card icon carries the symbol.
+const ToolHeaderMeta = ({ detail }) => {
+    if (!detail) return null;
+
+    if (detail.kind === 'shell') {
+        const visible = detail.programs.slice(0, MAX_HEADER_COMMANDS);
+        const hidden = detail.programs.slice(MAX_HEADER_COMMANDS);
+        return (
+            <span className="tool-meta tool-meta-shell">
+                {visible.map(({ name, command }, index) => (
+                    <code
+                        className="tool-meta-command"
+                        key={`${index}-${name}`}
+                        title={command}
+                    >
+                        {truncateHeaderCommand(name, MAX_HEADER_PROGRAM_CHARS)}
+                    </code>
+                ))}
+                {hidden.length > 0 && (
+                    <span
+                        className="tool-meta-more"
+                        title={hidden.map(({ command }) => command).join('  |  ')}
+                    >
+                        +{hidden.length}
+                    </span>
+                )}
+            </span>
+        );
+    }
+
+    const isEdit = detail.kind === 'editor-edit';
+    const path = detail.path ? shortenPath(detail.path) : null;
+    const range = isEdit ? null : formatViewRange(detail.range);
+
+    return (
+        <span className={clsx('tool-meta', isEdit ? 'tool-meta-edit' : 'tool-meta-read')}>
+            {path && (
+                <span className="tool-meta-path" title={detail.path}>{path}</span>
+            )}
+            {isEdit && (
+                <>
+                    <span
+                        className="tool-meta-stat is-add"
+                        title={`${detail.additions} line${detail.additions === 1 ? '' : 's'} added`}
+                    >
+                        ++{detail.additions}
+                    </span>
+                    <span
+                        className="tool-meta-stat is-remove"
+                        title={`${detail.removals} line${detail.removals === 1 ? '' : 's'} removed`}
+                    >
+                        --{detail.removals}
+                    </span>
+                </>
+            )}
+            {range && (
+                <span
+                    className="tool-meta-range"
+                    title={`Viewed lines ${detail.range.start}${detail.range.end == null ? ' to end of file' : `-${detail.range.end}`}`}
+                >
+                    {range}
+                </span>
+            )}
+        </span>
+    );
+};
 
 const ToolCall = ({ toolCall }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -121,15 +200,15 @@ const ToolCall = ({ toolCall }) => {
     const failed = fn.name === 'str_replace_editor' && isExplicitEditorError(rawOutputContent);
     const showSuccess = fn.name === 'str_replace_editor' ? hasOutputText : Boolean(output);
 
-    const getIcon = () => {
-        switch (fn.name) {
-            case 'terminal': return <Terminal size={16} className="tool-icon" />;
-            case 'file_editor': return <FileText size={16} className="tool-icon" />;
-            case 'think': return <Brain size={16} className="tool-icon" />;
-            case 'finish': return <Flag size={16} className="tool-icon" />;
-            default: return <Terminal size={16} className="tool-icon" />;
-        }
-    };
+    // What this call did, in one word: shell / edit / read / think / finish.
+    // Drives the header symbol and its accent color.
+    const nature = toolNature(fn.name, parsedArgs);
+    const NatureIcon = NATURE_ICONS[nature] ?? NATURE_ICONS.other;
+
+    const headerDetail = useMemo(
+        () => buildToolHeaderDetail(fn.name, parsedArgs, editorPresentation),
+        [fn.name, parsedArgs, editorPresentation]
+    );
 
     const renderSpecialToolBody = () => {
         if (fn.name === 'finish') {
@@ -189,8 +268,9 @@ const ToolCall = ({ toolCall }) => {
             <div className="tool-header" onClick={() => setIsOpen(!isOpen)}>
                 <div className="tool-title">
                     {isOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                    {getIcon()}
+                    <NatureIcon size={16} className={clsx('tool-icon', `nature-${nature}`)} />
                     <span className="fn-name">{fn.name}</span>
+                    <ToolHeaderMeta detail={headerDetail} />
                     {parsedArgs.summary && (
                         <span className="tool-summary">- {parsedArgs.summary}</span>
                     )}

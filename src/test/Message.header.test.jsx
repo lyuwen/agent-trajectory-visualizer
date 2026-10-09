@@ -63,4 +63,41 @@ describe('Message title bar tool list', () => {
     render(<Message message={{ role: 'assistant', content: 'No tools here' }} />);
     expect(document.querySelector('.message-tools')).toBeNull();
   });
+
+  it('marks each pill with the nature of the work', () => {
+    render(<Message message={message} />);
+    expect(pill('terminal')).toHaveClass('nature-shell');
+    expect(pill('think')).toHaveClass('nature-think');
+  });
+
+  it('separates file reads from file edits in the same turn', () => {
+    const editorTurn = {
+      role: 'assistant',
+      content: '',
+      tool_calls: [
+        {
+          id: 'v',
+          function: { name: 'str_replace_editor', arguments: '{"command":"view","path":"/a"}' },
+          output: { role: 'tool', content: 'ok' },
+        },
+        {
+          id: 'e',
+          function: {
+            name: 'str_replace_editor',
+            arguments: '{"command":"str_replace","path":"/a","old_str":"x","new_str":"y"}',
+          },
+          output: { role: 'tool', content: 'ok' },
+        },
+      ],
+    };
+
+    render(<Message message={editorTurn} />);
+
+    const readPill = headerTools().getByText('read').closest('.message-tool-pill');
+    const editPill = headerTools().getByText('edit').closest('.message-tool-pill');
+
+    expect(readPill).toHaveClass('nature-read');
+    expect(editPill).toHaveClass('nature-edit');
+    expect(editPill).toHaveAttribute('title', 'str_replace_editor · edit ×1 — 1/1 completed');
+  });
 });

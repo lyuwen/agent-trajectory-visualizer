@@ -1,33 +1,62 @@
 import React, { useState } from 'react';
-import { User, Bot, Settings, ChevronDown, ChevronRight, Wrench, CheckCircle, XCircle } from 'lucide-react';
+import { User, Bot, Settings, ChevronDown, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
 import clsx from 'clsx';
 import MarkdownContent from './MarkdownContent';
+import { natureIcon } from './natureIcons';
 import ToolCall from './ToolCall';
+import { NATURE_LABELS, TOOL_NATURE, toolNature } from '../toolCallHeader';
 import './Message.css';
 
+const parseArguments = (raw) => {
+    if (typeof raw !== 'string') return null;
+    try {
+        return JSON.parse(raw);
+    } catch {
+        return null;
+    }
+};
+
 /**
- * Deduplicated tool names called in this turn, in first-seen order, with how
- * many of them have produced output (the same completion signal ToolCall uses).
+ * Tool calls made in this turn, grouped by tool *and* by what the call does.
+ * A `str_replace_editor` turn that both views and edits therefore reads as two
+ * pills — a read (eye) and an edit (pencil) — instead of one ambiguous name.
+ * Includes how many calls have produced output (the completion signal ToolCall
+ * uses) and the label to show: the tool name, or the nature word when one tool
+ * spans several natures.
  */
 const summarizeToolCalls = (toolCalls) => {
     const order = [];
-    const byName = new Map();
+    const byKey = new Map();
 
     for (const call of toolCalls) {
         const name = call?.function?.name;
         if (!name) continue;
 
-        let entry = byName.get(name);
+        const nature = toolNature(name, parseArguments(call?.function?.arguments));
+        const key = `${name}::${nature}`;
+
+        let entry = byKey.get(key);
         if (!entry) {
-            entry = { name, total: 0, done: 0 };
-            byName.set(name, entry);
+            entry = { key, name, nature, total: 0, done: 0 };
+            byKey.set(key, entry);
             order.push(entry);
         }
         entry.total += 1;
         if (call.output) entry.done += 1;
     }
 
-    return order;
+    const groupsByName = new Map();
+    for (const entry of order) {
+        groupsByName.set(entry.name, (groupsByName.get(entry.name) ?? 0) + 1);
+    }
+
+    return order.map((entry) => ({
+        ...entry,
+        label:
+            groupsByName.get(entry.name) > 1 && entry.nature !== TOOL_NATURE.OTHER
+                ? NATURE_LABELS[entry.nature]
+                : entry.name,
+    }));
 };
 
 const Message = ({ message, expandSignal }) => {
@@ -60,16 +89,21 @@ const Message = ({ message, expandSignal }) => {
 
                 {toolSummary.length > 0 && (
                     <div className="message-tools" title="Tools called in this turn">
-                        {toolSummary.map(({ name, total, done }) => {
+                        {toolSummary.map(({ key, label, name, nature, total, done }) => {
                             const complete = done === total;
+                            const NatureIcon = natureIcon(nature);
                             return (
                                 <span
-                                    key={name}
-                                    className={clsx('message-tool-pill', complete ? 'is-complete' : 'is-pending')}
-                                    title={`${name} ×${total} — ${done}/${total} completed`}
+                                    key={key}
+                                    className={clsx(
+                                        'message-tool-pill',
+                                        `nature-${nature}`,
+                                        complete ? 'is-complete' : 'is-pending'
+                                    )}
+                                    title={`${label === name ? name : `${name} · ${nature}`} ×${total} — ${done}/${total} completed`}
                                 >
-                                    <Wrench size={10} className="message-tool-pill__icon" />
-                                    <span className="message-tool-pill__name">{name}</span>
+                                    <NatureIcon size={10} className="message-tool-pill__icon" />
+                                    <span className="message-tool-pill__name">{label}</span>
                                     {total > 1 && <span className="message-tool-pill__count">×{total}</span>}
                                     {complete
                                         ? <CheckCircle size={11} className="message-tool-pill__status" />

@@ -13,6 +13,17 @@
   --glass-border: rgba(255, 255, 255, 0.1);
   --glass-blur: 12px;
 
+  /* Accents for what an agent is doing, shared by tool cards, their header
+     chips, and the message-level tool pills. Keeping them here means one
+     glyph/color pair reads the same everywhere. */
+  --nature-shell: #22d3ee;  /* running commands */
+  --nature-edit: #f472b6;   /* changing files */
+  --nature-read: #60a5fa;   /* inspecting files */
+  --nature-think: #a78bfa;  /* reasoning */
+  --nature-finish: #34d399; /* done */
+  --nature-task: #fb923c;   /* delegating */
+  --nature-other: #a1a1aa;  /* everything else */
+
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;

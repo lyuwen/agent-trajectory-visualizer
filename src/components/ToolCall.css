@@ -27,14 +27,101 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.82rem;
     color: var(--accent-color);
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .tool-icon {
     opacity: 0.8;
+    flex-shrink: 0;
+}
+
+/* The card's leading symbol carries the nature of the call; the color is the
+   same one the message-level pill and the header chips use. */
+.tool-icon.nature-shell { color: var(--nature-shell); }
+.tool-icon.nature-edit { color: var(--nature-edit); }
+.tool-icon.nature-read { color: var(--nature-read); }
+.tool-icon.nature-think { color: var(--nature-think); }
+.tool-icon.nature-finish { color: var(--nature-finish); }
+.tool-icon.nature-task { color: var(--nature-task); }
+.tool-icon.nature-other { color: var(--nature-other); }
+
+/* Evidence chips beside the tool name, visible while the card is collapsed. */
+.tool-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+    /* Atomic: a squeezed row shrinks the summary, never breaks a `--5` at its
+       hyphens onto a second visual line and never cuts the filename off. */
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    font-weight: 400;
+}
+
+.tool-meta-path {
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex: 0 0 auto;
+}
+
+.tool-meta-stat {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tool-meta-stat.is-add {
+    color: #4ade80;
+}
+
+.tool-meta-stat.is-remove {
+    color: #f87171;
+}
+
+.tool-meta-range {
+    padding: 0 0.3rem;
+    border: 1px solid rgba(96, 165, 250, 0.32);
+    border-radius: 0.3rem;
+    background: rgba(96, 165, 250, 0.12);
+    color: var(--nature-read);
+    font-size: 0.72rem;
+    white-space: nowrap;
+}
+
+.tool-meta-command {
+    max-width: 30ch;
+    padding: 0 0.35rem;
+    border: 1px solid rgba(34, 211, 238, 0.28);
+    border-radius: 0.3rem;
+    background: rgba(34, 211, 238, 0.1);
+    color: var(--nature-shell);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.tool-meta-more {
+    color: var(--text-secondary);
+    font-size: 0.72rem;
+    white-space: nowrap;
 }
 
 .fn-name {
     font-weight: 600;
+    flex-shrink: 0;
+}
+
+.tool-status {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    margin-left: 0.4rem;
 }
 
 .tool-status .success {
@@ -75,6 +162,10 @@
     overflow: hidden;
     text-overflow: ellipsis;
     max-width: 400px;
+    /* The summary is the only elastic item on the header row: the name, the
+       evidence chips, and the status all stay intact while it truncates. */
+    flex: 0 1 auto;
+    min-width: 0;
 }
 
 /* NEW STYLES */

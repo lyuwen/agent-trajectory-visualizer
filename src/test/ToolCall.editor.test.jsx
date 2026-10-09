@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import ToolCall from '../components/ToolCall';
 
@@ -32,9 +32,10 @@ describe('ToolCall str_replace_editor integration', () => {
       '     2\treturn a;',
     ].join('\n');
 
-    await openCard('str_replace_editor', { command: 'view', path: 'src/app.js' }, output);
+    const { container } = await openCard('str_replace_editor', { command: 'view', path: 'src/app.js' }, output);
 
-    expect(screen.getByText('src/app.js')).toBeInTheDocument();
+    // The path now appears twice — as a header chip and in the body's Path row.
+    expect(within(container.querySelector('.tool-header')).getByText('src/app.js')).toBeInTheDocument();
 
     const region = screen.getByRole('region', { name: 'Viewed source' });
     expect(region).toHaveTextContent('const a = 1;');
@@ -178,7 +179,7 @@ describe('ToolCall str_replace_editor integration', () => {
       undefined
     );
 
-    expect(screen.getByText('src/app.js')).toBeInTheDocument();
+    expect(within(container.querySelector('.tool-header')).getByText('src/app.js')).toBeInTheDocument();
     expect(screen.queryByText('Output')).toBeNull();
     expect(screen.queryByRole('region')).toBeNull();
     expect(container.querySelector('.tool-status .pending')).not.toBeNull();

@@ -3,6 +3,7 @@ import {
   isExplicitEditorError,
   parseNumberedEditorOutput,
   buildEditorPresentation,
+  summarizeEditorChange,
 } from '../strReplaceEditorPresentation';
 
 const NUMBERED_HEADER = "Here's the result of running `cat -n` on /tmp/a.py:";
@@ -571,5 +572,37 @@ describe('buildEditorPresentation: fallback', () => {
       path: '/x',
       content: '42',
     });
+  });
+});
+
+describe('summarizeEditorChange', () => {
+  it('counts a str_replace from its old and new strings', () => {
+    expect(
+      summarizeEditorChange({ command: 'str_replace', old_str: 'a\nb', new_str: 'a\nc' })
+    ).toEqual({ additions: 1, removals: 1 });
+  });
+
+  it('treats create and insert as additions only', () => {
+    expect(summarizeEditorChange({ command: 'create', file_text: 'a\nb\nc' })).toEqual({
+      additions: 3,
+      removals: 0,
+    });
+    expect(
+      summarizeEditorChange({ command: 'insert', insert_line: 2, new_str: 'a\nb' })
+    ).toEqual({ additions: 2, removals: 0 });
+  });
+
+  it('returns null for actions it cannot quantify', () => {
+    expect(summarizeEditorChange({ command: 'view', path: '/x' })).toBeNull();
+    expect(summarizeEditorChange({ command: 'undo_edit', path: '/x' })).toBeNull();
+    expect(summarizeEditorChange({ command: 'str_replace', old_str: 'a' })).toBeNull();
+    expect(summarizeEditorChange({ command: 'create', file_text: 'None' })).toBeNull();
+    expect(summarizeEditorChange({ command: 'insert', insert_line: -1, new_str: 'a' })).toBeNull();
+  });
+
+  it('never throws for malformed arguments', () => {
+    for (const args of [null, undefined, 'not an object', ['create'], 42, true]) {
+      expect(summarizeEditorChange(args)).toBeNull();
+    }
   });
 });
