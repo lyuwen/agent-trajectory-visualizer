@@ -44,15 +44,18 @@
     margin-left: 0.25rem;
 }
 
-/* Tool calls made in this turn, summarised in the message title bar. */
+/* Tool calls made in this turn, summarised in the message title bar. The strip
+   wraps rather than clipping so that a narrow window never hides the tail of
+   the agentic flow; the row grows taller instead. */
 .message-tools {
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
     align-items: center;
     gap: 0.25rem;
     margin-left: auto;
     margin-right: 0.5rem;
     min-width: 0;
-    overflow: hidden;
 }
 
 .message-tool-pill {
@@ -93,6 +96,47 @@
 
 .message-tool-pill__count {
     opacity: 0.75;
+}
+
+/* Collapsed-turn evidence: the same line-change totals and program labels the
+   tool card header shows, so a folded turn still reads as a flow. */
+.message-tool-pill__evidence {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.22rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.message-tool-pill__evidence::before {
+    content: '·';
+    color: var(--text-secondary);
+    opacity: 0.55;
+}
+
+.message-tool-pill__program {
+    color: var(--nature-shell);
+    white-space: nowrap;
+}
+
+.message-tool-pill__stat {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.message-tool-pill__stat.is-add {
+    color: var(--diff-add);
+}
+
+.message-tool-pill__stat.is-remove {
+    color: var(--diff-remove);
+}
+
+.message-tool-pill__more {
+    color: var(--text-secondary);
+    opacity: 0.75;
+    white-space: nowrap;
 }
 
 .message-tool-pill.is-complete .message-tool-pill__status {

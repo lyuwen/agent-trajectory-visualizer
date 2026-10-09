@@ -76,11 +76,11 @@
 }
 
 .tool-meta-stat.is-add {
-    color: #4ade80;
+    color: var(--diff-add);
 }
 
 .tool-meta-stat.is-remove {
-    color: #f87171;
+    color: var(--diff-remove);
 }
 
 .tool-meta-range {

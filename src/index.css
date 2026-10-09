@@ -24,6 +24,11 @@
   --nature-task: #fb923c;   /* delegating */
   --nature-other: #a1a1aa;  /* everything else */
 
+  /* Added/removed line counts, shared by the tool card header and the turn
+     pills so a `++3 --1` reads the same on both surfaces. */
+  --diff-add: #4ade80;
+  --diff-remove: #f87171;
+
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 400;

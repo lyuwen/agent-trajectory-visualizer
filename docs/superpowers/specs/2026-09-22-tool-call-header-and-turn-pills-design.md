@@ -77,6 +77,14 @@ work.
 - A pill keeps the tool name when that tool has a single nature; when one tool
   spans several natures, the pills are labeled with the nature (`read`, `edit`)
   and their tooltip names the underlying tool.
+- Each pill carries the collapsed-turn evidence, so the agentic flow is legible
+  without expanding anything: an edit pill aggregates `++added`/`--removed`
+  totals across the turn's edits, and a shell pill lists the distinct
+  informative programs (capped at three with a `+N`, full list on the tooltip).
+  Reads show neither, because their value is the files touched, which the name
+  and count already carry.
+- The pill strip wraps instead of clipping, so a narrow window grows the header
+  rather than hiding the tail of the flow.
 - Completion counts and titles are unchanged.
 
 ## Boundaries
@@ -102,7 +110,7 @@ work.
   counts, view ranges, and path formatting.
 - Component-test the header chips, nature icons, caps, truncation, pending
   edits, and the unchanged fallback for other tools through `ToolCall`.
-- Component-test the turn pills' nature classes and the read/edit split through
-  `Message`.
+- Component-test the turn pills' nature classes, the read/edit split, and the
+  aggregated line-change/program evidence through `Message`.
 - Run the complete Vitest suite, ESLint, and the production build, and check the
   header row in a real browser at full and narrow (comparison-pane) widths.

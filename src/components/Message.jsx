@@ -1,11 +1,20 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { User, Bot, Settings, ChevronDown, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
 import clsx from 'clsx';
 import MarkdownContent from './MarkdownContent';
 import { natureIcon } from './natureIcons';
 import ToolCall from './ToolCall';
-import { NATURE_LABELS, TOOL_NATURE, toolNature } from '../toolCallHeader';
+import {
+    buildToolHeaderDetail,
+    NATURE_LABELS,
+    TOOL_NATURE,
+    toolNature,
+    truncateHeaderCommand,
+} from '../toolCallHeader';
 import './Message.css';
+
+const MAX_PILL_PROGRAMS = 3;
+const MAX_PILL_PROGRAM_CHARS = 18;
 
 const parseArguments = (raw) => {
     if (typeof raw !== 'string') return null;
@@ -20,9 +29,13 @@ const parseArguments = (raw) => {
  * Tool calls made in this turn, grouped by tool *and* by what the call does.
  * A `str_replace_editor` turn that both views and edits therefore reads as two
  * pills — a read (eye) and an edit (pencil) — instead of one ambiguous name.
- * Includes how many calls have produced output (the completion signal ToolCall
- * uses) and the label to show: the tool name, or the nature word when one tool
- * spans several natures.
+ *
+ * Each group also accumulates the evidence the collapsed card header shows:
+ * added/removed line totals for edits and the distinct informative programs for
+ * shell calls, so a folded turn still reads as an agentic flow. Includes how
+ * many calls have produced output (the completion signal ToolCall uses) and the
+ * label to show: the tool name, or the nature word when one tool spans several
+ * natures.
  */
 const summarizeToolCalls = (toolCalls) => {
     const order = [];
@@ -32,17 +45,41 @@ const summarizeToolCalls = (toolCalls) => {
         const name = call?.function?.name;
         if (!name) continue;
 
-        const nature = toolNature(name, parseArguments(call?.function?.arguments));
+        const args = parseArguments(call?.function?.arguments);
+        const nature = toolNature(name, args);
         const key = `${name}::${nature}`;
 
         let entry = byKey.get(key);
         if (!entry) {
-            entry = { key, name, nature, total: 0, done: 0 };
+            entry = {
+                key,
+                name,
+                nature,
+                total: 0,
+                done: 0,
+                additions: 0,
+                removals: 0,
+                hasChange: false,
+                programs: [],
+            };
             byKey.set(key, entry);
             order.push(entry);
         }
         entry.total += 1;
         if (call.output) entry.done += 1;
+
+        // Ranges need output, but edits and shell programs come from the
+        // arguments alone, which is all a collapsed turn has.
+        const detail = buildToolHeaderDetail(name, args, null);
+        if (detail?.kind === 'editor-edit') {
+            entry.additions += detail.additions;
+            entry.removals += detail.removals;
+            entry.hasChange = true;
+        } else if (detail?.kind === 'shell') {
+            for (const { name: program } of detail.programs) {
+                if (!entry.programs.includes(program)) entry.programs.push(program);
+            }
+        }
     }
 
     const groupsByName = new Map();
@@ -74,7 +111,10 @@ const Message = ({ message, expandSignal }) => {
     });
 
     const Icon = message.role === 'user' ? User : (message.role === 'assistant' ? Bot : Settings);
-    const toolSummary = summarizeToolCalls(message.tool_calls ?? []);
+    const toolSummary = useMemo(
+        () => summarizeToolCalls(message.tool_calls ?? []),
+        [message.tool_calls]
+    );
 
     return (
         <div className={clsx("message-container", message.role)}>
@@ -89,9 +129,22 @@ const Message = ({ message, expandSignal }) => {
 
                 {toolSummary.length > 0 && (
                     <div className="message-tools" title="Tools called in this turn">
-                        {toolSummary.map(({ key, label, name, nature, total, done }) => {
+                        {toolSummary.map(({
+                            key,
+                            label,
+                            name,
+                            nature,
+                            total,
+                            done,
+                            additions,
+                            removals,
+                            hasChange,
+                            programs,
+                        }) => {
                             const complete = done === total;
                             const NatureIcon = natureIcon(nature);
+                            const shownPrograms = programs.slice(0, MAX_PILL_PROGRAMS);
+                            const hiddenPrograms = programs.length - shownPrograms.length;
                             return (
                                 <span
                                     key={key}
@@ -104,6 +157,42 @@ const Message = ({ message, expandSignal }) => {
                                 >
                                     <NatureIcon size={10} className="message-tool-pill__icon" />
                                     <span className="message-tool-pill__name">{label}</span>
+                                    {hasChange && (
+                                        <span className="message-tool-pill__evidence">
+                                            <span
+                                                className="message-tool-pill__stat is-add"
+                                                title={`${additions} line${additions === 1 ? '' : 's'} added`}
+                                            >
+                                                ++{additions}
+                                            </span>
+                                            <span
+                                                className="message-tool-pill__stat is-remove"
+                                                title={`${removals} line${removals === 1 ? '' : 's'} removed`}
+                                            >
+                                                --{removals}
+                                            </span>
+                                        </span>
+                                    )}
+                                    {shownPrograms.length > 0 && (
+                                        <span
+                                            className="message-tool-pill__evidence"
+                                            title={programs.join(' · ')}
+                                        >
+                                            {shownPrograms.map((program) => (
+                                                <span
+                                                    className="message-tool-pill__program"
+                                                    key={program}
+                                                >
+                                                    {truncateHeaderCommand(program, MAX_PILL_PROGRAM_CHARS)}
+                                                </span>
+                                            ))}
+                                            {hiddenPrograms > 0 && (
+                                                <span className="message-tool-pill__more">
+                                                    +{hiddenPrograms}
+                                                </span>
+                                            )}
+                                        </span>
+                                    )}
                                     {total > 1 && <span className="message-tool-pill__count">×{total}</span>}
                                     {complete
                                         ? <CheckCircle size={11} className="message-tool-pill__status" />

@@ -100,4 +100,86 @@ describe('Message title bar tool list', () => {
     expect(editPill).toHaveClass('nature-edit');
     expect(editPill).toHaveAttribute('title', 'str_replace_editor · edit ×1 — 1/1 completed');
   });
+
+  it('shows the informative programs of shell calls on the pill', () => {
+    render(<Message message={message} />);
+
+    const shellPill = pill('terminal');
+    expect(within(shellPill).getByText('ls')).toHaveClass('message-tool-pill__program');
+    // `pwd` is plumbing and stays out of the collapsed evidence.
+    expect(within(shellPill).queryByText('pwd')).toBeNull();
+  });
+
+  it('caps the programs on a pill and reports how many are hidden', () => {
+    const shellTurn = {
+      role: 'assistant',
+      content: '',
+      tool_calls: ['grep a', 'find b', 'sed c', 'awk d'].map((command, index) => ({
+        id: `s${index}`,
+        function: { name: 'execute_bash', arguments: JSON.stringify({ command }) },
+        output: { role: 'tool', content: 'ok' },
+      })),
+    };
+
+    render(<Message message={shellTurn} />);
+
+    const shellPill = pill('execute_bash');
+    for (const program of ['grep', 'find', 'sed']) {
+      expect(within(shellPill).getByText(program)).toBeInTheDocument();
+    }
+    expect(within(shellPill).queryByText('awk')).toBeNull();
+    expect(within(shellPill).getByText('+1')).toBeInTheDocument();
+  });
+
+  it('aggregates the line changes of edits into the edit pill', () => {
+    const editTurn = {
+      role: 'assistant',
+      content: '',
+      tool_calls: [
+        {
+          id: 'e1',
+          function: {
+            name: 'str_replace_editor',
+            arguments: '{"command":"str_replace","path":"/a","old_str":"x","new_str":"y"}',
+          },
+          output: { role: 'tool', content: 'ok' },
+        },
+        {
+          id: 'e2',
+          function: {
+            name: 'str_replace_editor',
+            arguments: '{"command":"create","path":"/b","file_text":"a\\nb\\nc"}',
+          },
+          output: { role: 'tool', content: 'ok' },
+        },
+      ],
+    };
+
+    render(<Message message={editTurn} />);
+
+    const editPill = pill('str_replace_editor');
+    // +1/-1 from the replacement plus +3/-0 from the create.
+    expect(within(editPill).getByText('++4')).toHaveClass('is-add');
+    expect(within(editPill).getByText('--1')).toHaveClass('is-remove');
+    expect(within(editPill).getByText('×2')).toBeInTheDocument();
+  });
+
+  it('leaves a read pill without change or program evidence', () => {
+    const readTurn = {
+      role: 'assistant',
+      content: '',
+      tool_calls: [
+        {
+          id: 'v',
+          function: { name: 'str_replace_editor', arguments: '{"command":"view","path":"/a"}' },
+          output: { role: 'tool', content: 'ok' },
+        },
+      ],
+    };
+
+    render(<Message message={readTurn} />);
+
+    const readPill = pill('str_replace_editor');
+    expect(readPill.querySelector('.message-tool-pill__evidence')).toBeNull();
+  });
 });
