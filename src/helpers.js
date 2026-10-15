@@ -205,6 +205,44 @@ export function soloFilterSet(facets, key) {
 }
 
 /**
+ * Build the hidden-filter set that shows only the given tool types — the
+ * many-key counterpart of soloFilterSet(), used for "show only the tool calls
+ * of the focused message" where one turn can carry several tool types.
+ *
+ * Like soloFilterSet(), `role:assistant` is never hidden: assistant turns
+ * survive on the strength of their tool keys, and a turn whose calls are all
+ * hidden drops out in TrajectoryViewer.
+ *
+ * @param {{roles: object, kinds: object, tools: object}} facets - Counts from mergeFacets()
+ * @param {Iterable<string>} names - Tool names to keep visible
+ * @returns {Set<string>} Keys to hide
+ */
+export function soloToolsFilterSet(facets, names) {
+  const keep = new Set();
+  for (const name of names ?? []) {
+    if (name) keep.add(`tool:${name}`);
+  }
+
+  const next = new Set();
+
+  for (const role of Object.keys(facets?.roles ?? {})) {
+    if (role === 'assistant') continue;
+    next.add(`role:${role}`);
+  }
+
+  for (const kind of Object.keys(facets?.kinds ?? {})) {
+    next.add(`kind:${kind}`);
+  }
+
+  for (const name of Object.keys(facets?.tools ?? {})) {
+    const toolKey = `tool:${name}`;
+    if (!keep.has(toolKey)) next.add(toolKey);
+  }
+
+  return next;
+}
+
+/**
  * Filter markdown content to a plain string.
  * @param {string|Array|null|undefined} content
  * @returns {string|null|undefined}

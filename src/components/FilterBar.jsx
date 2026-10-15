@@ -44,6 +44,9 @@ const FilterBar = ({
     comparisonOpen,
     onCollapseAll,
     onExpandAll,
+    // Reports which filter chip the mouse is over so App can bind `d` to the
+    // hovered chip ("show only this") without re-implementing solos here.
+    onHoverChip,
 }) => {
     const tools = counts?.tools ?? {};
 
@@ -78,9 +81,12 @@ const FilterBar = ({
             <button
                 key={key}
                 type="button"
+                data-filter-key={key}
                 className={clsx('filter-chip', className, hidden && 'filter-chip--off')}
                 aria-pressed={!hidden}
                 title={title}
+                onMouseEnter={() => onHoverChip?.(key)}
+                onMouseLeave={() => onHoverChip?.(null)}
                 onClick={(event) => {
                     event.stopPropagation();
                     // A double-click arrives as click, click, dblclick. The
@@ -117,7 +123,10 @@ const FilterBar = ({
             aria-label="Filter trajectory messages"
             onClick={(event) => event.stopPropagation()}
         >
-            <div className="filter-bar__inner">
+            <div
+                className="filter-bar__inner"
+                onMouseLeave={() => onHoverChip?.(null)}
+            >
                 <span
                     className="filter-bar__title"
                     title="Click a chip to show or hide that type · double-click to show only it"
