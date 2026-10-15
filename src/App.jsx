@@ -334,12 +334,16 @@ function App() {
     }
   }, [comparisonOpen, closeComparisonPanel]);
 
-  // `o` — the split's replace-trajectory button: same picker, opening the split
-  // first so the chosen file lands in a visible pane.
-  const openSplitTrajectory = useCallback(() => {
-    setComparisonOpen(true);
-    rightFileInputRef.current?.click();
-  }, []);
+  // `o` — the replace-trajectory button of whichever pane the viewer is
+  // showing: the split's picker while the split is on, the primary one
+  // otherwise. It never forces the split open.
+  const openTrajectoryPicker = useCallback(() => {
+    if (comparisonOpen) {
+      rightFileInputRef.current?.click();
+    } else {
+      fileInputRef.current?.click();
+    }
+  }, [comparisonOpen]);
 
   const toggleHelp = useCallback(() => setHelpOpen((value) => !value), []);
 
@@ -563,7 +567,7 @@ function App() {
       soloFocusedTools,
       resetFilters,
       toggleSplit,
-      openSplitTrajectory,
+      openTrajectoryPicker,
       toggleScrollLockInSplit,
       scrollFocusedPanelTo,
       toggleHelp,
@@ -659,7 +663,7 @@ function App() {
           break;
         case 'o':
           event.preventDefault();
-          state.openSplitTrajectory();
+          state.openTrajectoryPicker();
           break;
         case 'w':
           event.preventDefault();
@@ -839,6 +843,7 @@ function App() {
       <input
         ref={fileInputRef}
         type="file"
+        data-testid="left-trajectory-input"
         accept=".json,.jsonl,application/json"
         onChange={handleLeftFabChange}
         style={{ display: 'none' }}

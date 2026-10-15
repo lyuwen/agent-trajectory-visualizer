@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
@@ -44,6 +44,15 @@ const loadRight = async (container) => {
 };
 
 const cards = (container, selector = '') => container.querySelectorAll(`.message-container${selector}`);
+
+// The file pickers are hidden inputs; observing their click() is how the `o`
+// binding is checked without opening a dialog.
+const spyOnFileInput = (container, testId) =>
+    vi.spyOn(container.querySelector(`[data-testid="${testId}"]`), 'click').mockImplementation(() => {});
+
+afterEach(() => {
+    vi.restoreAllMocks();
+});
 
 describe('App keyboard shortcuts — messages', () => {
     it('collapses every message with f and expands them again with e', async () => {
@@ -160,18 +169,45 @@ describe('App keyboard shortcuts — split view', () => {
         await waitFor(() => expect(container.querySelector('.comparison-panel')).toBeNull());
     });
 
-    it('opens the split’s trajectory picker with o', async () => {
+    it('opens the primary picker with o while the split is off', async () => {
         const { container } = render(<App />);
         await loadLeft(container);
 
-        const rightInput = container.querySelector('[data-testid="right-trajectory-input"]');
-        const clickSpy = vi.spyOn(rightInput, 'click').mockImplementation(() => {});
+        const leftClick = spyOnFileInput(container, 'left-trajectory-input');
+        const rightClick = spyOnFileInput(container, 'right-trajectory-input');
 
         await userEvent.keyboard('o');
 
-        expect(clickSpy).toHaveBeenCalledTimes(1);
+        expect(leftClick).toHaveBeenCalledTimes(1);
+        expect(rightClick).not.toHaveBeenCalled();
+        // `o` must not force the split open just to replace something in it.
+        expect(container.querySelector('.comparison-panel')).toBeNull();
+    });
+
+    it('opens the split’s picker with o once the split is on', async () => {
+        const { container } = render(<App />);
+        await loadLeft(container);
+
+        await userEvent.keyboard('s');
         expect(container.querySelector('.comparison-panel')).not.toBeNull();
-        clickSpy.mockRestore();
+
+        const leftClick = spyOnFileInput(container, 'left-trajectory-input');
+        const rightClick = spyOnFileInput(container, 'right-trajectory-input');
+
+        await userEvent.keyboard('o');
+
+        expect(rightClick).toHaveBeenCalledTimes(1);
+        expect(leftClick).not.toHaveBeenCalled();
+    });
+
+    it('opens the primary picker with o before any trajectory is loaded', async () => {
+        const { container } = render(<App />);
+
+        const leftClick = spyOnFileInput(container, 'left-trajectory-input');
+
+        await userEvent.keyboard('o');
+
+        expect(leftClick).toHaveBeenCalledTimes(1);
     });
 
     it('toggles scroll lock with w only once both panes are loaded', async () => {
