@@ -26,7 +26,7 @@ export const SHORTCUT_GROUPS = [
         title: 'Split view',
         shortcuts: [
             { keys: ['s'], label: 'Toggle the split panel' },
-            { keys: ['o'], label: 'Open a trajectory: the split’s while it is on, the main one otherwise' },
+            { keys: ['o'], label: 'Open the focused pane’s trajectory (the split’s when nothing is focused)' },
             { keys: ['w'], label: 'Toggle scroll lock (split only)' },
         ],
     },

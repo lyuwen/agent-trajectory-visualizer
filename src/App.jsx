@@ -334,11 +334,15 @@ function App() {
     }
   }, [comparisonOpen, closeComparisonPanel]);
 
-  // `o` — the replace-trajectory button of whichever pane the viewer is
-  // showing: the split's picker while the split is on, the primary one
-  // otherwise. It never forces the split open.
+  // `o` — the replace-trajectory button of the pane the user is working in.
+  // Keyboard focus decides, exactly as it does for `c`, Shift+D and the page
+  // jumps; when nothing inside a pane holds focus the visible split answers,
+  // and with no split the primary pane does. It never forces the split open.
   const openTrajectoryPicker = useCallback(() => {
-    if (comparisonOpen) {
+    const active = typeof document !== 'undefined' ? document.activeElement : null;
+    const inPane = (node) => !!(active && node && node.contains(active));
+
+    if (inPane(rightScrollRef.current) || (!inPane(leftScrollRef.current) && comparisonOpen)) {
       rightFileInputRef.current?.click();
     } else {
       fileInputRef.current?.click();

@@ -184,7 +184,7 @@ describe('App keyboard shortcuts — split view', () => {
         expect(container.querySelector('.comparison-panel')).toBeNull();
     });
 
-    it('opens the split’s picker with o once the split is on', async () => {
+    it('falls back to the split’s picker with o when nothing is focused', async () => {
         const { container } = render(<App />);
         await loadLeft(container);
 
@@ -194,6 +194,40 @@ describe('App keyboard shortcuts — split view', () => {
         const leftClick = spyOnFileInput(container, 'left-trajectory-input');
         const rightClick = spyOnFileInput(container, 'right-trajectory-input');
 
+        // No pane holds focus: the visible split answers.
+        document.activeElement?.blur?.();
+        await userEvent.keyboard('o');
+
+        expect(rightClick).toHaveBeenCalledTimes(1);
+        expect(leftClick).not.toHaveBeenCalled();
+    });
+
+    it('follows focus into the primary pane with o while the split is on', async () => {
+        const { container } = render(<App />);
+        await loadLeft(container);
+        await userEvent.keyboard('s');
+
+        const leftClick = spyOnFileInput(container, 'left-trajectory-input');
+        const rightClick = spyOnFileInput(container, 'right-trajectory-input');
+
+        // Focusing a primary-pane message must win over the open split.
+        const userCard = container.querySelector('.message-container.user');
+        await userEvent.click(within(userCard).getByText('user'));
+        await userEvent.keyboard('o');
+
+        expect(leftClick).toHaveBeenCalledTimes(1);
+        expect(rightClick).not.toHaveBeenCalled();
+    });
+
+    it('follows focus into the split pane with o', async () => {
+        const { container } = render(<App />);
+        await loadLeft(container);
+        await loadRight(container);
+
+        const leftClick = spyOnFileInput(container, 'left-trajectory-input');
+        const rightClick = spyOnFileInput(container, 'right-trajectory-input');
+
+        act(() => container.querySelector('.comparison-panel .trajectory-scroll').focus());
         await userEvent.keyboard('o');
 
         expect(rightClick).toHaveBeenCalledTimes(1);

@@ -55,7 +55,7 @@ typing in a text field and never shadow Ctrl/Cmd/Alt chords.
 | <kbd>⇧</kbd>+<kbd>d</kbd> | Show only the tool calls of the focused message              |
 | <kbd>a</kbd>  | Show every type again (same as **All**)                                   |
 | <kbd>s</kbd>  | Toggle the split panel                                                    |
-| <kbd>o</kbd>  | Open a trajectory — the split's while split view is on, the main one otherwise |
+| <kbd>o</kbd>  | Open a trajectory for the focused pane — the split's when nothing is focused |
 | <kbd>w</kbd>  | Toggle scroll lock (split view only)                                      |
 | <kbd>g</kbd> <kbd>g</kbd> | Go to the top of the focused panel                             |
 | <kbd>⇧</kbd>+<kbd>G</kbd> | Go to the bottom of the focused panel                          |
