@@ -28,14 +28,16 @@ const TrajectoryViewer = ({
   const messagesWithTurns = useMemo(() => {
     let assistantTurnCount = 0;
 
-    return processedMessages.map((msg) => {
+    return processedMessages.map((msg, sourceIndex) => {
+      // sourceIndex travels with the message so the render key below stays
+      // stable when a filter drops messages ahead of it.
       if (msg.role === 'system') {
-        return { ...msg, turnIndex: null };
+        return { ...msg, sourceIndex, turnIndex: null };
       }
 
       if (msg.role === 'assistant') {
         assistantTurnCount++;
-        return { ...msg, turnIndex: assistantTurnCount };
+        return { ...msg, sourceIndex, turnIndex: assistantTurnCount };
       }
 
       if (msg.role === 'user') {
@@ -43,10 +45,10 @@ const TrajectoryViewer = ({
         // If there's already been an assistant message, use the next turn number
         // Otherwise use turn 1
         const nextTurn = assistantTurnCount + 1;
-        return { ...msg, turnIndex: nextTurn };
+        return { ...msg, sourceIndex, turnIndex: nextTurn };
       }
 
-      return msg;
+      return { ...msg, sourceIndex };
     });
   }, [processedMessages]);
 
@@ -56,7 +58,8 @@ const TrajectoryViewer = ({
   // A tool chip classifies the whole message, not just its cards: when every
   // call in a turn is filtered out the turn goes away instead of lingering as
   // a tool-less shell. A turn whose calls are only partly hidden stays, showing
-  // just the surviving cards.
+  // just the surviving cards. Assistant turns that call nothing are their own
+  // type, `kind:reply`.
   const visibleMessages = useMemo(() => {
     if (!hiddenFilters || hiddenFilters.size === 0) return messagesWithTurns;
 
@@ -65,7 +68,10 @@ const TrajectoryViewer = ({
         if (hiddenFilters.has(`role:${msg.role}`)) return null;
 
         const calls = Array.isArray(msg.tool_calls) ? msg.tool_calls : [];
-        if (calls.length === 0) return { ...msg, tool_calls: calls };
+        if (calls.length === 0) {
+          if (msg.role === 'assistant' && hiddenFilters.has('kind:reply')) return null;
+          return { ...msg, tool_calls: calls };
+        }
 
         const toolCalls = calls.filter((tc) => !hiddenFilters.has(`tool:${tc?.function?.name}`));
         if (toolCalls.length === 0) return null;
@@ -100,9 +106,13 @@ const TrajectoryViewer = ({
           </div>
 
           <div className="messages-list">
-            {visibleMessages.map((msg, index) => (
+            {visibleMessages.map((msg) => (
               <Message
-                key={`${index}:${expandSignal?.token ?? 0}`}
+                // Keyed by original position, not filtered position: with
+                // index keys a filter change would hand a surviving message
+                // the mounted state (collapsed or expanded) of whichever
+                // message used to sit at that index.
+                key={`${msg.sourceIndex}:${expandSignal?.token ?? 0}`}
                 message={msg}
                 expandSignal={expandSignal}
               />

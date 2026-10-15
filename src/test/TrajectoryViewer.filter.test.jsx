@@ -31,6 +31,22 @@ const data = {
 const renderWith = (hidden) =>
   render(<TrajectoryViewer data={data} hiddenFilters={new Set(hidden)} />);
 
+// A trajectory whose assistant work is split between a plain reply and a
+// tool-calling turn: two classes that must be filterable independently.
+const replyData = {
+  instance_id: 'reply-demo',
+  messages: [
+    { role: 'user', content: 'Ask' },
+    { role: 'assistant', content: 'A plain reply' },
+    {
+      role: 'assistant',
+      content: 'Runs a tool',
+      tool_calls: [{ id: 't', function: { name: 'terminal', arguments: '{"command":"ls"}' } }],
+    },
+    { role: 'tool', tool_call_id: 't', content: 'file.txt' },
+  ],
+};
+
 const cardCount = (container) => container.querySelectorAll('.message-container').length;
 const toolCards = (container, name) =>
   container.querySelectorAll(`.tool-call-container${name ? `.${name}` : ''}`).length;
@@ -71,6 +87,44 @@ describe('TrajectoryViewer filtering', () => {
     expect(cardCount(container)).toBe(2);
     expect(screen.getByText('user')).toBeInTheDocument();
     expect(screen.queryByText('Mixed turn')).not.toBeInTheDocument();
+  });
+
+  it('does not hand a survivor the folded state of the message a filter removed', () => {
+    const { rerender } = render(<TrajectoryViewer data={data} hiddenFilters={new Set()} />);
+    // The user message is expanded by default; the system message above it is
+    // folded. Hiding system shifts the user message up one slot.
+    expect(screen.getByText('Do the thing')).toBeInTheDocument();
+
+    rerender(<TrajectoryViewer data={data} hiddenFilters={new Set(['role:system'])} />);
+
+    expect(screen.queryByText('System prompt')).not.toBeInTheDocument();
+    expect(screen.getByText('Do the thing')).toBeInTheDocument();
+  });
+
+  it('hides plain assistant replies when their own class is off', () => {
+    const { container } = render(
+      <TrajectoryViewer data={replyData} hiddenFilters={new Set(['kind:reply'])} />
+    );
+
+    expect(screen.queryByText('A plain reply')).not.toBeInTheDocument();
+    expect(screen.getByText('Ask')).toBeInTheDocument();
+    expect(screen.getByText('Runs a tool')).toBeInTheDocument();
+    expect(cardCount(container)).toBe(2);
+  });
+
+  it('drops plain replies under a tool solo, so "only this tool" stays literal', () => {
+    const { container } = render(
+      <TrajectoryViewer
+        data={replyData}
+        hiddenFilters={new Set(['role:user', 'role:system', 'kind:reply', 'tool:think'])}
+      />
+    );
+
+    expect(screen.queryByText('A plain reply')).not.toBeInTheDocument();
+    expect(screen.queryByText('Ask')).not.toBeInTheDocument();
+    expect(screen.getByText('Runs a tool')).toBeInTheDocument();
+    expect(cardCount(container)).toBe(1);
+    expect(toolCards(container, 'terminal')).toBe(1);
   });
 
   it('explains the empty state when no message has anything left to show', () => {

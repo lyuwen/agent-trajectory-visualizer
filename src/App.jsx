@@ -7,7 +7,7 @@ import Notifications from './components/Notifications';
 import ComparisonPanel from './components/ComparisonPanel';
 import TrajectorySidebar from './components/TrajectorySidebar';
 import FilterBar from './components/FilterBar';
-import { isJSONL, parseJSONL, isATIF, normalizeATIF, computeFacets, mergeFacets } from './helpers';
+import { isJSONL, parseJSONL, isATIF, normalizeATIF, computeFacets, mergeFacets, soloFilterSet } from './helpers';
 import './App.css';
 
 const MAX_NOTIFICATIONS = 5;
@@ -130,6 +130,11 @@ function App() {
       return next;
     });
   }, []);
+
+  // "Show only this": one move instead of switching every other chip off.
+  const soloFilter = useCallback((key) => {
+    setHiddenFilters(soloFilterSet(filterCounts, key));
+  }, [filterCounts]);
 
   const resetFilters = useCallback(() => setHiddenFilters(new Set()), []);
 
@@ -528,6 +533,7 @@ function App() {
               counts={filterCounts}
               hiddenFilters={hiddenFilters}
               onToggle={toggleFilter}
+              onSolo={soloFilter}
               onReset={resetFilters}
               comparisonOpen={!!rightFileData}
               onCollapseAll={collapseAllMessages}

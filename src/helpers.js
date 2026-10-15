@@ -103,14 +103,16 @@ export function normalizeATIF(data) {
 }
 
 /**
- * Count message roles and tool call types in a trajectory, for the filter strip.
+ * Count message roles, plain assistant replies, and tool call types in a
+ * trajectory, for the filter strip.
  * Counts raw messages: tool-role messages are excluded because processMessages()
  * merges them into the assistant tool_calls that are counted here.
  * @param {object|null|undefined} data - Normalized trajectory
- * @returns {{roles: Object<string, number>, tools: Object<string, number>}}
+ * @returns {{roles: Object<string, number>, kinds: Object<string, number>, tools: Object<string, number>}}
  */
 export function computeFacets(data) {
   const roles = { user: 0, system: 0, assistant: 0 };
+  const kinds = { reply: 0 };
   const tools = {};
 
   const messages = Array.isArray(data?.messages) ? data.messages : [];
@@ -122,46 +124,84 @@ export function computeFacets(data) {
       roles[msg.role] += 1;
     }
 
-    if (Array.isArray(msg.tool_calls)) {
-      for (const call of msg.tool_calls) {
-        const name = call?.function?.name;
-        if (!name) continue;
-        tools[name] = (tools[name] ?? 0) + 1;
-      }
+    const calls = Array.isArray(msg.tool_calls) ? msg.tool_calls : [];
+
+    // An assistant turn with no tool calls belongs to no tool type, so it needs
+    // its own key to be hideable on its own instead of riding along with the
+    // role chips.
+    if (msg.role === 'assistant' && calls.length === 0) {
+      kinds.reply += 1;
+    }
+
+    for (const call of calls) {
+      const name = call?.function?.name;
+      if (!name) continue;
+      tools[name] = (tools[name] ?? 0) + 1;
     }
   }
 
-  return { roles, tools };
+  return { roles, kinds, tools };
 }
 
 /**
  * Merge two facet counts into per-pane values for the filter strip.
- * @param {{roles: object, tools: object}} left
- * @param {{roles: object, tools: object}} right
- * @returns {{roles: Object<string, {left: number, right: number}>, tools: Object<string, {left: number, right: number}>}}
+ * @param {{roles: object, kinds: object, tools: object}} left
+ * @param {{roles: object, kinds: object, tools: object}} right
+ * @returns {{roles: Object<string, {left: number, right: number}>, kinds: Object<string, {left: number, right: number}>, tools: Object<string, {left: number, right: number}>}}
  */
 export function mergeFacets(left, right) {
   const pair = (a, b) => ({ left: a ?? 0, right: b ?? 0 });
 
-  const roles = {};
-  const roleKeys = new Set([
-    ...Object.keys(left?.roles ?? {}),
-    ...Object.keys(right?.roles ?? {}),
-  ]);
-  for (const key of roleKeys) {
-    roles[key] = pair(left?.roles?.[key], right?.roles?.[key]);
+  const mergeBucket = (bucket) => {
+    const merged = {};
+    const keys = new Set([
+      ...Object.keys(left?.[bucket] ?? {}),
+      ...Object.keys(right?.[bucket] ?? {}),
+    ]);
+    for (const key of keys) {
+      merged[key] = pair(left?.[bucket]?.[key], right?.[bucket]?.[key]);
+    }
+    return merged;
+  };
+
+  return {
+    roles: mergeBucket('roles'),
+    kinds: mergeBucket('kinds'),
+    tools: mergeBucket('tools'),
+  };
+}
+
+/**
+ * Build the hidden-filter set that shows a single type and hides every other
+ * filterable one — the "show only this" counterpart of a plain toggle.
+ *
+ * `role:assistant` is never added: assistant turns are covered by the tool keys
+ * of the calls they make, and a turn that calls nothing is a `kind:reply`.
+ *
+ * @param {{roles: object, kinds: object, tools: object}} facets - Counts from mergeFacets()
+ * @param {string} key - Filter key to keep visible, e.g. "tool:terminal"
+ * @returns {Set<string>} Keys to hide
+ */
+export function soloFilterSet(facets, key) {
+  const next = new Set();
+
+  for (const role of Object.keys(facets?.roles ?? {})) {
+    if (role === 'assistant') continue;
+    const roleKey = `role:${role}`;
+    if (roleKey !== key) next.add(roleKey);
   }
 
-  const tools = {};
-  const toolKeys = new Set([
-    ...Object.keys(left?.tools ?? {}),
-    ...Object.keys(right?.tools ?? {}),
-  ]);
-  for (const key of toolKeys) {
-    tools[key] = pair(left?.tools?.[key], right?.tools?.[key]);
+  for (const kind of Object.keys(facets?.kinds ?? {})) {
+    const kindKey = `kind:${kind}`;
+    if (kindKey !== key) next.add(kindKey);
   }
 
-  return { roles, tools };
+  for (const name of Object.keys(facets?.tools ?? {})) {
+    const toolKey = `tool:${name}`;
+    if (toolKey !== key) next.add(toolKey);
+  }
+
+  return next;
 }
 
 /**
