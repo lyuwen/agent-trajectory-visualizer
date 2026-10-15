@@ -25,7 +25,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   - builds and pushes a Docker image to GHCR
   - builds and deploys the static site to GitHub Pages
 - The Pages job builds with `npm run build -- --base=/agent-trajectory-visualizer/`. If you change asset paths or introduce routing, keep that base path requirement in mind.
-- Both the Dockerfile and the Pages workflow currently install dependencies with `rm -f package-lock.json && npm install`. If you need to reproduce CI/container behavior locally, use the same sequence.
+- Both the Dockerfile and the Pages workflow install dependencies with `npm ci` using the committed lockfile. Use `npm ci` to reproduce CI/container dependency installation locally.
 - `nginx.conf` is configured as an SPA: requests fall back to `/index.html`.
 
 ## Architecture overview
