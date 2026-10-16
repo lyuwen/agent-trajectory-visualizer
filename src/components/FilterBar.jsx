@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { User, Settings, MessageSquare, Wrench, RotateCcw, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import clsx from 'clsx';
 import './FilterBar.css';
@@ -44,8 +44,34 @@ const FilterBar = ({
     comparisonOpen,
     onCollapseAll,
     onExpandAll,
+    // Reports which filter chip the mouse is over so App can bind `d` to the
+    // hovered chip ("show only this") without re-implementing solos here.
+    onHoverChip,
 }) => {
+    const stripRef = useRef(null);
     const tools = counts?.tools ?? {};
+
+    // The strip scrolls when chips outgrow the viewport, but it shows no
+    // scrollbar (see FilterBar.css). A plain mouse only has a vertical wheel,
+    // so translate that into horizontal travel to keep the chips that
+    // overflowed reachable. Registered natively because React's wheel
+    // listeners are passive and could not preventDefault.
+    useEffect(() => {
+        const node = stripRef.current;
+        if (!node) return undefined;
+
+        const handleWheel = (event) => {
+            if (node.scrollWidth <= node.clientWidth) return;
+            const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+            if (!delta) return;
+            const scale = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? node.clientWidth : 1;
+            event.preventDefault();
+            node.scrollLeft += delta * scale;
+        };
+
+        node.addEventListener('wheel', handleWheel, { passive: false });
+        return () => node.removeEventListener('wheel', handleWheel);
+    }, []);
 
     const toolEntries = Object.entries(tools).sort((a, b) => {
         const totalA = a[1].left + a[1].right;
@@ -78,9 +104,12 @@ const FilterBar = ({
             <button
                 key={key}
                 type="button"
+                data-filter-key={key}
                 className={clsx('filter-chip', className, hidden && 'filter-chip--off')}
                 aria-pressed={!hidden}
                 title={title}
+                onMouseEnter={() => onHoverChip?.(key)}
+                onMouseLeave={() => onHoverChip?.(null)}
                 onClick={(event) => {
                     event.stopPropagation();
                     // A double-click arrives as click, click, dblclick. The
@@ -117,7 +146,11 @@ const FilterBar = ({
             aria-label="Filter trajectory messages"
             onClick={(event) => event.stopPropagation()}
         >
-            <div className="filter-bar__inner">
+            <div
+                className="filter-bar__inner"
+                ref={stripRef}
+                onMouseLeave={() => onHoverChip?.(null)}
+            >
                 <span
                     className="filter-bar__title"
                     title="Click a chip to show or hide that type · double-click to show only it"

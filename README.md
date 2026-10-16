@@ -19,6 +19,9 @@ A modern, offline-first React application to visualize agentic trajectories from
   - Shows the number of tools available in the trajectory at the top of the viewer.
   - Hover over the tools count to see a tooltip with tool names and descriptions.
   - Automatically extracts tool information from the `tools` field in your trajectory JSON.
+- **Keyboard Shortcuts**: Drive the viewer without the mouse — expand/collapse, filter by the
+  focused message's tool calls, split view, page jumps, and more. Press <kbd>?</kbd> in the app
+  for the full cheatsheet.
 
 ## Getting Started
 
@@ -37,6 +40,26 @@ A modern, offline-first React application to visualize agentic trajectories from
 
 4.  **Visualize**:
     Drag and drop your `*.history.json` file onto the upload area.
+
+## Keyboard Shortcuts
+
+Press <kbd>?</kbd> anywhere in the viewer to open the cheatsheet. Shortcuts are ignored while
+typing in a text field and never shadow Ctrl/Cmd/Alt chords.
+
+| Key           | Action                                                                    |
+| ------------- | ------------------------------------------------------------------------- |
+| <kbd>e</kbd>  | Expand every message                                                      |
+| <kbd>f</kbd>  | Collapse every message                                                    |
+| <kbd>c</kbd>  | Toggle the focused message (click a message, or use ↑/↓, to focus one)     |
+| <kbd>d</kbd>  | Show only the filter chip under the mouse                                 |
+| <kbd>⇧</kbd>+<kbd>d</kbd> | Show only the tool calls of the focused message              |
+| <kbd>a</kbd>  | Show every type again (same as **All**)                                   |
+| <kbd>s</kbd>  | Toggle the split panel                                                    |
+| <kbd>o</kbd>  | Open a trajectory for the focused pane — the split's when nothing is focused |
+| <kbd>w</kbd>  | Toggle scroll lock (split view only)                                      |
+| <kbd>g</kbd> <kbd>g</kbd> | Go to the top of the focused panel                             |
+| <kbd>⇧</kbd>+<kbd>G</kbd> | Go to the bottom of the focused panel                          |
+| <kbd>?</kbd>  | Show or hide the cheatsheet (<kbd>Esc</kbd> also closes it)               |
 
 ## Trajectory JSON Format
 

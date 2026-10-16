@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeFacets, mergeFacets, soloFilterSet } from '../helpers';
+import { computeFacets, mergeFacets, soloFilterSet, soloToolsFilterSet } from '../helpers';
 
 const trajectory = {
   messages: [
@@ -140,5 +140,39 @@ describe('soloFilterSet', () => {
 
   it('tolerates missing facets', () => {
     expect(soloFilterSet(null, 'tool:terminal')).toEqual(new Set());
+  });
+});
+
+describe('soloToolsFilterSet', () => {
+  const facets = mergeFacets(computeFacets(trajectory), computeFacets(null));
+
+  it('keeps several tool types and hides the rest', () => {
+    expect(soloToolsFilterSet(facets, ['terminal', 'think'])).toEqual(
+      new Set(['role:user', 'role:system', 'kind:reply'])
+    );
+  });
+
+  it('hides the tools a focused message did not call', () => {
+    expect(soloToolsFilterSet(facets, ['think'])).toEqual(
+      new Set(['role:user', 'role:system', 'kind:reply', 'tool:terminal'])
+    );
+  });
+
+  it('never hides the assistant role, mirroring soloFilterSet', () => {
+    expect(soloToolsFilterSet(facets, ['think']).has('role:assistant')).toBe(false);
+  });
+
+  it('keeps a requested tool even when it has no calls in the data', () => {
+    expect(soloToolsFilterSet(facets, ['think', 'finish'])).toEqual(
+      new Set(['role:user', 'role:system', 'kind:reply', 'tool:terminal'])
+    );
+  });
+
+  it('tolerates missing facets and an empty name list', () => {
+    expect(soloToolsFilterSet(null, ['think'])).toEqual(new Set());
+    expect(soloToolsFilterSet(facets, [])).toEqual(
+      new Set(['role:user', 'role:system', 'kind:reply', 'tool:terminal', 'tool:think'])
+    );
+    expect(soloToolsFilterSet(facets, null)).toEqual(soloToolsFilterSet(facets, []));
   });
 });

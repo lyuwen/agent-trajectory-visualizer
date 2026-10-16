@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { User, Bot, Settings, ChevronDown, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
 import clsx from 'clsx';
 import MarkdownContent from './MarkdownContent';
@@ -109,6 +109,7 @@ const Message = ({ message, expandSignal }) => {
         if (!expandSignal?.token) return !isSystem;
         return expandSignal.expanded && !isSystem;
     });
+    const containerRef = useRef(null);
 
     const Icon = message.role === 'user' ? User : (message.role === 'assistant' ? Bot : Settings);
     const toolSummary = useMemo(
@@ -116,9 +117,47 @@ const Message = ({ message, expandSignal }) => {
         [message.tool_calls]
     );
 
+    // Tool names travel on the DOM node so App can read them off whichever
+    // message holds focus without keeping a parallel copy of the message tree.
+    const toolNames = useMemo(() => {
+        const names = [];
+        for (const call of message.tool_calls ?? []) {
+            const name = call?.function?.name;
+            if (name && !names.includes(name)) names.push(name);
+        }
+        return names;
+    }, [message.tool_calls]);
+
+    // Clicking a message both folds it and puts it "in focus", which is what
+    // the `c` shortcut and Shift+D act on. A browser would focus the node on
+    // its own; this makes the intent explicit and keeps it working where the
+    // container is not the click target.
+    const handleHeaderClick = () => {
+        setIsExpanded((value) => !value);
+        containerRef.current?.focus({ preventScroll: true });
+    };
+
+    // `c` — toggle this message when it is the focused one. Handled here
+    // rather than in App because the binding is meaningful only while this
+    // node (or something inside it) holds focus. The event is left to bubble
+    // so App's handler can still cancel a half-typed `gg` chord.
+    const handleKeyDown = (event) => {
+        if (event.key !== 'c' && event.key !== 'C') return;
+        if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+        if (event.repeat) return;
+        event.preventDefault();
+        setIsExpanded((value) => !value);
+    };
+
     return (
-        <div className={clsx("message-container", message.role)}>
-            <div className="message-header" onClick={() => setIsExpanded(!isExpanded)}>
+        <div
+            className={clsx("message-container", message.role)}
+            ref={containerRef}
+            tabIndex={-1}
+            data-tool-names={toolNames.join(' ')}
+            onKeyDown={handleKeyDown}
+        >
+            <div className="message-header" onClick={handleHeaderClick}>
                 <div className="role-badge">
                     <Icon size={16} />
                     <span>{message.role}</span>

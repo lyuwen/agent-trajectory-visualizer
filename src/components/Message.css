@@ -11,6 +11,18 @@
     border-color: rgba(255, 255, 255, 0.2);
 }
 
+/* The focused message is the target of `c` and Shift+D, so it has to be
+   visible at a glance. Pointer focus stays quiet; keyboard focus rings. */
+.message-container:focus {
+    outline: none;
+}
+
+.message-container:focus-visible {
+    border-color: rgba(99, 102, 241, 0.7);
+    outline: 2px solid rgba(99, 102, 241, 0.45);
+    outline-offset: 2px;
+}
+
 .message-container.system {
     border-style: dashed;
     opacity: 0.8;

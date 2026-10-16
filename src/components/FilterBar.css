@@ -20,12 +20,15 @@
     gap: 0.35rem;
     max-width: 100%;
     overflow-x: auto;
-    scrollbar-width: thin;
+    /* Chips that outgrow the viewport scroll away, but the strip itself stays
+       clean: no scrollbar in either engine. FilterBar's wheel handler turns a
+       vertical wheel into horizontal travel so they remain reachable. */
+    scrollbar-width: none;
     padding: 0.2rem 0;
 }
 
 .filter-bar__inner::-webkit-scrollbar {
-    height: 4px;
+    display: none;
 }
 
 .filter-bar__title {
