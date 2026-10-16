@@ -498,61 +498,66 @@ function App() {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      // Only handle arrow keys when not typing in an input/textarea
-      if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
-        return;
-      }
+      if (isTypingTarget(event.target)) return;
 
       if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
         return;
       }
 
-      event.preventDefault();
-
-      const scrollContainer = focusedPanel === 'left' ? leftScrollRef.current : rightScrollRef.current;
+      // The pane holding focus answers, the way `o` resolves its target; the
+      // remembered pane is only a fallback for when focus has left the panes.
+      const active = document.activeElement;
+      const focusedScroll = active instanceof Element ? active.closest('.trajectory-scroll') : null;
+      const scrollContainer = focusedScroll
+        ?? (focusedPanel === 'left' ? leftScrollRef.current : rightScrollRef.current);
       if (!scrollContainer) return;
 
-      const messages = scrollContainer.querySelectorAll('.message-container');
+      const messages = Array.from(scrollContainer.querySelectorAll('.message-container'));
       if (messages.length === 0) return;
 
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const containerTop = containerRect.top;
+      const isDown = event.key === 'ArrowDown';
 
-      let currentIndex = 0;
-      let minDistance = Infinity;
+      // The caret is the focused message. Anchoring on it — rather than on
+      // whichever message happens to sit at the top edge — is what lets the
+      // walk continue past the point where the pane can no longer scroll: the
+      // last messages can never be aligned to the top, so a proximity anchor
+      // would keep selecting the same one and the caret would never reach them.
+      const activeMessage = active instanceof Element ? active.closest('.message-container') : null;
+      let currentIndex = activeMessage ? messages.indexOf(activeMessage) : -1;
 
-      // Find the message whose top edge is closest to the container's top edge
-      // This identifies which message is most prominently at the top of the viewport
-      for (let i = 0; i < messages.length; i++) {
-        const msgRect = messages[i].getBoundingClientRect();
-        const distance = Math.abs(msgRect.top - containerTop);
-        if (distance < minDistance) {
-          minDistance = distance;
-          currentIndex = i;
+      if (currentIndex < 0) {
+        const containerTop = scrollContainer.getBoundingClientRect().top;
+        let minDistance = Infinity;
+        currentIndex = 0;
+        for (let i = 0; i < messages.length; i++) {
+          const distance = Math.abs(messages[i].getBoundingClientRect().top - containerTop);
+          if (distance < minDistance) {
+            minDistance = distance;
+            currentIndex = i;
+          }
         }
       }
 
-      let targetIndex = -1;
+      const targetIndex = isDown
+        ? Math.min(currentIndex + 1, messages.length - 1)
+        : Math.max(currentIndex - 1, 0);
 
-      if (event.key === 'ArrowDown') {
-        // Move to next message
-        targetIndex = Math.min(currentIndex + 1, messages.length - 1);
-      } else {
-        // ArrowUp: Move to previous message
-        targetIndex = Math.max(currentIndex - 1, 0);
-      }
+      // At either end there is no message left to move the caret to, so the key
+      // is left to the browser: swallowing it would stop the pane from
+      // scrolling to whatever sits below the last message (the patch panel).
+      if (targetIndex === currentIndex) return;
 
-      if (targetIndex >= 0 && targetIndex < messages.length) {
-        const targetMessage = messages[targetIndex];
-        // Moving the caret between messages is what makes "the message in
-        // focus" reachable from the keyboard; `c` and Shift+D act on it.
-        targetMessage.focus?.({ preventScroll: true });
-        const targetTop = targetMessage.offsetTop;
-        scrollContainer.scrollTo({
-          top: targetTop,
-          behavior: 'smooth',
-        });
-      }
+      event.preventDefault();
+
+      const targetMessage = messages[targetIndex];
+      // Moving the caret between messages is what makes "the message in focus"
+      // reachable from the keyboard; `c` and Shift+D act on it.
+      targetMessage.focus?.({ preventScroll: true });
+      const targetTop = targetMessage.offsetTop;
+      scrollContainer.scrollTo({
+        top: targetTop,
+        behavior: 'smooth',
+      });
     };
 
     window.addEventListener('keydown', handleKeyDown);
