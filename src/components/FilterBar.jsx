@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { User, Settings, MessageSquare, Wrench, RotateCcw, ChevronsDownUp, ChevronsUpDown } from 'lucide-react';
 import clsx from 'clsx';
 import './FilterBar.css';
@@ -48,7 +48,30 @@ const FilterBar = ({
     // hovered chip ("show only this") without re-implementing solos here.
     onHoverChip,
 }) => {
+    const stripRef = useRef(null);
     const tools = counts?.tools ?? {};
+
+    // The strip scrolls when chips outgrow the viewport, but it shows no
+    // scrollbar (see FilterBar.css). A plain mouse only has a vertical wheel,
+    // so translate that into horizontal travel to keep the chips that
+    // overflowed reachable. Registered natively because React's wheel
+    // listeners are passive and could not preventDefault.
+    useEffect(() => {
+        const node = stripRef.current;
+        if (!node) return undefined;
+
+        const handleWheel = (event) => {
+            if (node.scrollWidth <= node.clientWidth) return;
+            const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+            if (!delta) return;
+            const scale = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? node.clientWidth : 1;
+            event.preventDefault();
+            node.scrollLeft += delta * scale;
+        };
+
+        node.addEventListener('wheel', handleWheel, { passive: false });
+        return () => node.removeEventListener('wheel', handleWheel);
+    }, []);
 
     const toolEntries = Object.entries(tools).sort((a, b) => {
         const totalA = a[1].left + a[1].right;
@@ -125,6 +148,7 @@ const FilterBar = ({
         >
             <div
                 className="filter-bar__inner"
+                ref={stripRef}
                 onMouseLeave={() => onHoverChip?.(null)}
             >
                 <span

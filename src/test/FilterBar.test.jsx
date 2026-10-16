@@ -190,4 +190,48 @@ describe('FilterBar', () => {
     await userEvent.dblClick(screen.getByRole('button', { name: 'All' }));
     expect(onReset).toHaveBeenCalledTimes(1);
   });
+
+  describe('overflowing chip strip', () => {
+    // The strip hides its scrollbar, so the wheel is the way a mouse reaches
+    // the chips that scrolled out of view. jsdom has no layout, so the
+    // measured widths are stubbed.
+    const overflow = () => {
+      setup();
+      const strip = document.querySelector('.filter-bar__inner');
+      Object.defineProperty(strip, 'scrollWidth', { value: 900, configurable: true });
+      Object.defineProperty(strip, 'clientWidth', { value: 400, configurable: true });
+      return strip;
+    };
+
+    it('turns a vertical wheel into horizontal travel', () => {
+      const strip = overflow();
+      const event = new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true });
+      strip.dispatchEvent(event);
+
+      expect(strip.scrollLeft).toBe(120);
+      // The page behind must not scroll along with the strip.
+      expect(event.defaultPrevented).toBe(true);
+    });
+
+    it('honours a horizontal wheel and normalises line deltas', () => {
+      const strip = overflow();
+
+      strip.dispatchEvent(new WheelEvent('wheel', { deltaX: -60, deltaY: 10, bubbles: true, cancelable: true }));
+      expect(strip.scrollLeft).toBe(-60);
+
+      strip.scrollLeft = 0;
+      strip.dispatchEvent(new WheelEvent('wheel', { deltaY: 3, deltaMode: 1, bubbles: true, cancelable: true }));
+      expect(strip.scrollLeft).toBe(72);
+    });
+
+    it('leaves the wheel alone when every chip fits', () => {
+      setup();
+      const strip = document.querySelector('.filter-bar__inner');
+      const event = new WheelEvent('wheel', { deltaY: 120, bubbles: true, cancelable: true });
+      strip.dispatchEvent(event);
+
+      expect(strip.scrollLeft).toBe(0);
+      expect(event.defaultPrevented).toBe(false);
+    });
+  });
 });
